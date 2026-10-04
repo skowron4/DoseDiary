@@ -12,10 +12,12 @@ import com.example.dosediary.data.local.entity.SymptomEntity
 
 @Database(
     entities = [MedicationEntity::class, SymptomEntity::class],
-    version = 2,
+    version = 3,
     exportSchema = true,
     autoMigrations = [
         AutoMigration(from = 1, to = 2, spec = AppDatabase.Migration1To2::class),
+        // v2 -> v3: new `tags` column on symptoms (defaults to '' for existing rows).
+        AutoMigration(from = 2, to = 3),
     ],
 )
 abstract class AppDatabase : RoomDatabase() {
