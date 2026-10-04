@@ -6,7 +6,12 @@ import com.example.dosediary.R
 import com.example.dosediary.domain.model.AppResult
 import com.example.dosediary.domain.model.DomainError
 import com.example.dosediary.domain.model.Medication
+import com.example.dosediary.domain.model.matchesQuery
+import com.example.dosediary.domain.usecase.AddSearchHistoryUseCase
+import com.example.dosediary.domain.usecase.ClearSearchHistoryUseCase
 import com.example.dosediary.domain.usecase.ObserveSavedMedicationsUseCase
+import com.example.dosediary.domain.usecase.ObserveSearchHistoryUseCase
+import com.example.dosediary.domain.usecase.RemoveSearchHistoryUseCase
 import com.example.dosediary.domain.usecase.SaveMedicationUseCase
 import com.example.dosediary.domain.usecase.SearchMedicationUseCase
 import com.example.dosediary.presentation.common.UiMessage
@@ -46,6 +51,10 @@ data class SearchUiState(
     val result: SearchResultState = SearchResultState.Idle,
     /** Ids of medications already saved, so rows can show "Saved". */
     val savedIds: Set<String> = emptySet(),
+    /** Saved medications matching the current query (empty while the query is blank). */
+    val localMatches: List<Medication> = emptyList(),
+    /** Recent queries, most recent first. Shown while the query is blank. */
+    val history: List<String> = emptyList(),
 )
 
 @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
@@ -53,6 +62,10 @@ class SearchViewModel(
     private val searchMedication: SearchMedicationUseCase,
     observeSavedMedications: ObserveSavedMedicationsUseCase,
     private val saveMedication: SaveMedicationUseCase,
+    observeHistory: ObserveSearchHistoryUseCase,
+    private val addToHistory: AddSearchHistoryUseCase,
+    private val removeFromHistory: RemoveSearchHistoryUseCase,
+    private val clearHistory: ClearSearchHistoryUseCase,
 ) : ViewModel() {
 
     private val _query = MutableStateFlow("")
@@ -87,18 +100,53 @@ class SearchViewModel(
             }
         }
 
-    private val savedIds: Flow<Set<String>> = observeSavedMedications()
-        .map { list -> list.mapTo(HashSet()) { it.id } as Set<String> }
-        .catch { emit(emptySet()) }
+    private val savedMedications: Flow<List<Medication>> = observeSavedMedications()
+        .catch { emit(emptyList()) }
+
+    private val history: Flow<List<String>> = observeHistory()
+        .catch { emit(emptyList()) }
 
     val uiState: StateFlow<SearchUiState> = combine(
         resultState.onStart { emit(SearchResultState.Idle) },
-        savedIds,
-    ) { result, saved -> SearchUiState(result, saved) }
+        savedMedications,
+        _query,
+        history,
+    ) { result, saved, query, recent ->
+        SearchUiState(
+            result = result,
+            savedIds = saved.mapTo(HashSet()) { it.id },
+            localMatches = if (query.isBlank()) emptyList() else saved.filter { it.matchesQuery(query) },
+            history = recent,
+        )
+    }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SearchUiState())
 
     fun onQueryChange(value: String) {
         _query.update { value }
+    }
+
+    /** The user submitted the query (keyboard "search" action): remember it. */
+    fun onSearchSubmitted() {
+        recordCurrentQuery()
+    }
+
+    /** A history row was tapped: run that query again and bump it to the top. */
+    fun onHistorySelected(query: String) {
+        _query.update { query }
+        viewModelScope.launch { runCatchingCancellable { addToHistory(query) } }
+    }
+
+    fun removeHistoryEntry(query: String) {
+        viewModelScope.launch { runCatchingCancellable { removeFromHistory(query) } }
+    }
+
+    fun clearAllHistory() {
+        viewModelScope.launch { runCatchingCancellable { clearHistory() } }
+    }
+
+    private fun recordCurrentQuery() {
+        val query = _query.value
+        viewModelScope.launch { runCatchingCancellable { addToHistory(query) } }
     }
 
     fun retry() {
@@ -106,6 +154,8 @@ class SearchViewModel(
     }
 
     fun save(medication: Medication) {
+        // Saving a result is a strong signal the query was useful.
+        recordCurrentQuery()
         viewModelScope.launch {
             val message = runCatchingCancellable { saveMedication(medication) }.fold(
                 onSuccess = { UiMessage(R.string.medication_saved, listOf(medication.displayName)) },

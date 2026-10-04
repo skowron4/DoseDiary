@@ -38,6 +38,14 @@ interface SettingsRepository {
     suspend fun setScreenProtectionEnabled(enabled: Boolean)
 }
 
+/** Recently submitted search queries, most recent first. */
+interface SearchHistoryRepository {
+    fun observeHistory(): Flow<List<String>>
+    suspend fun addQuery(query: String)
+    suspend fun removeQuery(query: String)
+    suspend fun clear()
+}
+
 /** Platform abstraction for scheduling local, repeating medication reminders. */
 interface ReminderScheduler {
     fun schedule(medicationId: String, medicationName: String, time: ReminderTime)
