@@ -6,6 +6,7 @@ import com.example.dosediary.R
 import com.example.dosediary.domain.model.AppResult
 import com.example.dosediary.domain.model.Medication
 import com.example.dosediary.domain.model.Symptom
+import com.example.dosediary.domain.model.SymptomTag
 import com.example.dosediary.domain.usecase.GetSymptomUseCase
 import com.example.dosediary.domain.usecase.LogSymptomUseCase
 import com.example.dosediary.domain.usecase.ObserveSavedMedicationsUseCase
@@ -31,6 +32,7 @@ data class AddSymptomUiState(
     val medications: List<Medication> = emptyList(),
     val selectedMedicationId: String? = null,
     val severity: Int = DEFAULT_SEVERITY,
+    val selectedTags: Set<SymptomTag> = emptySet(),
     val notes: String = "",
     val isSaving: Boolean = false,
     val errorMessage: UiMessage? = null,
@@ -90,6 +92,7 @@ class AddSymptomViewModel(
                         isLoading = false,
                         selectedMedicationId = symptom.medicationId,
                         severity = symptom.severity,
+                        selectedTags = symptom.tags,
                         notes = symptom.notes,
                     )
                 }
@@ -101,6 +104,12 @@ class AddSymptomViewModel(
 
     fun onSeverityChange(value: Int) = _uiState.update {
         it.copy(severity = value.coerceIn(Symptom.MIN_SEVERITY, Symptom.MAX_SEVERITY), errorMessage = null)
+    }
+
+    /** Adds the tag if it is not selected, removes it otherwise. */
+    fun onTagToggled(tag: SymptomTag) = _uiState.update {
+        val updated = if (tag in it.selectedTags) it.selectedTags - tag else it.selectedTags + tag
+        it.copy(selectedTags = updated, errorMessage = null)
     }
 
     fun onNotesChange(value: String) = _uiState.update {
@@ -119,6 +128,7 @@ class AddSymptomViewModel(
                     medicationId = current.selectedMedicationId,
                     severity = current.severity,
                     notes = current.notes,
+                    tags = current.selectedTags,
                     originalLoggedAtMillis = originalLoggedAtMillis,
                 )
             }
