@@ -1,5 +1,6 @@
 package com.example.dosediary.domain.repository
 
+import com.example.dosediary.domain.model.AppLanguage
 import com.example.dosediary.domain.model.AppResult
 import com.example.dosediary.domain.model.Medication
 import com.example.dosediary.domain.model.ReminderTime
@@ -44,6 +45,17 @@ interface SearchHistoryRepository {
     suspend fun addQuery(query: String)
     suspend fun removeQuery(query: String)
     suspend fun clear()
+}
+
+/**
+ * Per-app UI language. The platform owns persistence (Android 13+ system setting, or AppCompat's
+ * auto-stored locales on older versions), so no extra storage is needed here.
+ */
+interface LanguageManager {
+    fun getLanguage(): AppLanguage
+
+    /** Applies [language] and recreates the visible activity so all text switches immediately. */
+    fun setLanguage(language: AppLanguage)
 }
 
 /** Platform abstraction for scheduling local, repeating medication reminders. */
