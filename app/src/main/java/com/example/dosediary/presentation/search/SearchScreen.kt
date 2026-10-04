@@ -2,9 +2,14 @@ package com.example.dosediary.presentation.search
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -57,7 +62,11 @@ fun SearchScreen(
                     focusManager.clearFocus()
                 },
                 onBack = onNavigateUp,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                // Scaffold does not inset its topBar slot (TopAppBar does that itself), so this
+                // custom bar must keep clear of the status bar / display cutout on its own.
+                modifier = Modifier
+                    .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal))
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
             )
         },
     ) { padding ->
