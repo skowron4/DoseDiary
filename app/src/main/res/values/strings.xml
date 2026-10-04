@@ -1,0 +1,102 @@
+<resources>
+    <string name="app_name">DoseDiary</string>
+
+    <!-- Navigation -->
+    <string name="nav_dashboard">Home</string>
+    <string name="nav_settings">Settings</string>
+
+    <!-- Common actions -->
+    <string name="action_retry">Try again</string>
+    <string name="action_save">Save</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_clear">Clear</string>
+    <string name="action_back">Back</string>
+    <string name="action_unlock">Unlock</string>
+    <string name="action_edit_nickname">Edit nickname</string>
+
+    <!-- Lock / biometrics -->
+    <string name="lock_title">DoseDiary is locked</string>
+    <string name="lock_subtitle">Authenticate to open your medical diary.</string>
+    <string name="biometric_title">Unlock DoseDiary</string>
+    <string name="biometric_subtitle">Use your fingerprint, face, or screen lock</string>
+    <string name="biometric_unavailable">Authentication is temporarily unavailable. Please try again.</string>
+
+    <!-- Dashboard -->
+    <string name="dashboard_title">My diary</string>
+    <string name="section_medications">My medications</string>
+    <string name="section_symptoms">Symptom log</string>
+    <string name="medications_empty">You have not saved any medications yet.</string>
+    <string name="symptoms_empty">No symptoms logged yet. Tap “Log symptom” to add one.</string>
+    <string name="action_find_medications">Find medications</string>
+    <string name="action_log_symptom">Log symptom</string>
+    <string name="action_set_reminder">Set daily reminder</string>
+    <string name="symptom_general">General (no medication)</string>
+    <string name="reminder_daily_at">Daily at %1$s</string>
+    <string name="reminder_dialog_title">Daily reminder time</string>
+    <string name="reminder_set">Reminder for %1$s set for %2$s daily</string>
+    <string name="reminder_set_no_permission">Reminder saved for %1$s, but notifications are turned off, so you will not be alerted.</string>
+    <string name="reminder_cleared">Reminder for %1$s removed</string>
+    <string name="medication_removed">%1$s removed</string>
+    <string name="symptom_removed">Symptom entry deleted</string>
+    <string name="delete_medication_title">Remove medication?</string>
+    <string name="delete_medication_text">%1$s and its reminder will be removed. Your symptom history is kept.</string>
+    <string name="delete_symptom_title">Delete symptom entry?</string>
+    <string name="delete_symptom_text">This entry will be permanently deleted.</string>
+
+    <!-- Search (sticky bar on Home) -->
+    <string name="search_hint">Search medications (e.g. Advil)</string>
+    <string name="section_in_my_diary">In my diary</string>
+    <string name="section_openfda">From the OpenFDA database</string>
+    <string name="search_no_local_matches">None of your saved medications match.</string>
+
+    <!-- Nickname -->
+    <string name="nickname_dialog_title">Medication nickname</string>
+    <string name="nickname_label">Nickname</string>
+    <string name="nickname_original_name">Commercial name: %1$s</string>
+    <string name="nickname_hint_clear">Leave empty to show the commercial name instead.</string>
+    <string name="nickname_saved">Nickname updated</string>
+    <string name="search_idle">Type at least 2 letters to search the OpenFDA drug database.</string>
+    <string name="search_no_results">No medications found. Check the spelling or try another brand name.</string>
+    <string name="action_save_medication">Save to my diary</string>
+    <string name="action_saved">Saved</string>
+    <string name="medication_saved">%1$s saved to your diary</string>
+
+    <!-- Add / edit symptom -->
+    <string name="add_symptom_title">Log symptom</string>
+    <string name="edit_symptom_title">Edit symptom</string>
+    <string name="related_medication_label">Related medication</string>
+    <string name="severity_label">Severity</string>
+    <string name="severity_mild">1 – Mild</string>
+    <string name="severity_severe">10 – Severe</string>
+    <string name="notes_label">Notes (optional)</string>
+    <string name="error_symptom_not_found">This symptom entry could not be found.</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="setting_dark_mode">Dark mode</string>
+    <string name="setting_dark_mode_desc">Use a dark color scheme</string>
+    <string name="setting_biometrics">Biometric lock</string>
+    <string name="setting_biometrics_desc">Require fingerprint, face, or screen lock to open the diary</string>
+    <string name="setting_screen_protection">Block screenshots</string>
+    <string name="setting_screen_protection_desc">Hide the app from screenshots, screen recording and the recent-apps preview</string>
+
+    <!-- Notifications -->
+    <string name="notification_channel_name">Medication reminders</string>
+    <string name="notification_channel_description">Daily reminders to take your medication</string>
+    <string name="notification_title">Time for your medication</string>
+    <string name="notification_text">Don\'t forget to take %1$s.</string>
+
+    <!-- Errors -->
+    <string name="error_no_internet">No internet connection. Check your network and try again.</string>
+    <string name="error_timeout">The request timed out. Please try again.</string>
+    <string name="error_server">The drug database returned an error (%1$d). Please try again later.</string>
+    <string name="error_parsing">Received an unexpected response from the drug database.</string>
+    <string name="error_query_too_short">Please enter at least 2 characters.</string>
+    <string name="error_severity_range">Severity must be between 1 and 10.</string>
+    <string name="error_notes_too_long">Notes are too long.</string>
+    <string name="error_nickname_too_long">The nickname is too long.</string>
+    <string name="error_medication_not_found">That medication is no longer in your diary.</string>
+    <string name="error_storage">Could not access local storage. Please try again.</string>
+    <string name="error_unknown">Something went wrong. Please try again.</string>
+</resources>
