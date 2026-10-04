@@ -27,6 +27,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.example.dosediary.R
 import com.example.dosediary.presentation.dashboard.DashboardScreen
+import com.example.dosediary.presentation.search.SearchScreen
 import com.example.dosediary.presentation.settings.SettingsScreen
 import com.example.dosediary.presentation.symptom.AddSymptomScreen
 import com.example.dosediary.presentation.symptom.AddSymptomViewModel
@@ -87,6 +88,13 @@ fun DoseDiaryNavHost(navController: NavHostController = rememberNavController())
                 DashboardScreen(
                     onLogSymptom = { medicationId -> navController.navigate(AddSymptomRoute(medicationId = medicationId)) },
                     onEditSymptom = { symptomId -> navController.navigate(AddSymptomRoute(symptomId = symptomId)) },
+                    onOpenSearch = { navController.navigate(SearchRoute) { launchSingleTop = true } },
+                )
+            }
+            composable<SearchRoute> {
+                SearchScreen(
+                    onNavigateUp = { navController.navigateUp() },
+                    onLogSymptom = { medicationId -> navController.navigate(AddSymptomRoute(medicationId = medicationId)) },
                 )
             }
             composable<SettingsRoute> { SettingsScreen() }
