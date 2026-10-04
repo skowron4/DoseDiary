@@ -50,7 +50,7 @@ fun NicknameDialog(
                     label = { Text(stringResource(R.string.nickname_label)) },
                     supportingText = {
                         Text(
-                            text = "${text.length} / ${Medication.MAX_NICKNAME_LENGTH}",
+                            text = stringResource(R.string.counter_of, text.length, Medication.MAX_NICKNAME_LENGTH),
                             modifier = Modifier.fillMaxWidth(),
                             textAlign = TextAlign.End,
                         )

@@ -71,7 +71,9 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.activity.compose)
-    // BiometricPrompt needs a FragmentActivity host.
+    // BiometricPrompt needs a FragmentActivity host; AppCompatActivity is one, and it is also what
+    // makes per-app language switching (AppCompatDelegate.setApplicationLocales) work below Android 13.
+    implementation(libs.androidx.appcompat)
     implementation(libs.androidx.fragment.ktx)
 
     // Compose (Material 3)
