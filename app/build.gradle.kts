@@ -56,6 +56,10 @@ android {
     testOptions {
         unitTests.isReturnDefaultValues = true
     }
+    sourceSets {
+        // The exported Room schemas are what MigrationTestHelper builds the old database versions from.
+        getByName("androidTest").assets.srcDir("$projectDir/schemas")
+    }
 }
 
 // Room exports its schema so migrations can be verified/tested.
@@ -120,6 +124,7 @@ dependencies {
     // Instrumented tests
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+    androidTestImplementation(libs.androidx.room.testing)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)

@@ -48,7 +48,7 @@ private val PillShape = RoundedCornerShape(8.dp)
  *    one-line ellipsis), everything else keeps its natural size, so no wrapping is ever computed;
  *  - it receives final strings ([MedicationItemUi]); nothing is formatted or looked up here.
  *
- * Text hierarchy: commercial name, then the nickname, then the dosage line, then the active substance.
+ * Text hierarchy: commercial name, then the nickname, then the frequency line, then the active substance.
  * The reminder pill and the "log symptom" action share one row to keep the card short.
  */
 @Composable
@@ -91,7 +91,7 @@ fun MedicationCard(
                         overflow = TextOverflow.Ellipsis,
                     )
                 }
-                item.dosage?.let {
+                item.frequency?.let {
                     Text(text = it, style = typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
                 item.substance?.let {
@@ -189,7 +189,7 @@ private fun MedicationCardPreview() {
                 title = "Advil",
                 displayName = "Advil",
                 nickname = null,
-                dosage = null,
+                frequency = null,
                 substance = "Ibuprofen",
                 reminderText = "Set a reminder",
             ),
@@ -202,7 +202,7 @@ private fun MedicationCardPreview() {
     }
 }
 
-@Preview(name = "Nickname, dosage and reminders", showBackground = true)
+@Preview(name = "Nickname, frequency and intakes", showBackground = true)
 @Composable
 private fun MedicationCardFullPreview() {
     DoseDiaryTheme(dynamicColor = false) {
@@ -212,9 +212,9 @@ private fun MedicationCardFullPreview() {
                 title = "Advil",
                 displayName = "Morning headache pill",
                 nickname = "Morning headache pill",
-                dosage = "2 pills, every 8h",
+                frequency = "Every 2 days",
                 substance = "Ibuprofen",
-                reminderText = "Daily at 8:00 AM, 4:00 PM, 11:59 PM, 12:30 AM, 1:00 AM",
+                reminderText = "8:00 AM · 2 pills, 4:00 PM · 1 pill, 11:59 PM, 12:30 AM",
             ),
             labels = previewLabels,
             onLogSymptom = {},

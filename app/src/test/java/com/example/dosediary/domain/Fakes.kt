@@ -3,10 +3,12 @@ package com.example.dosediary.domain
 import com.example.dosediary.domain.model.AppResult
 import com.example.dosediary.domain.model.Medication
 import com.example.dosediary.domain.model.MedicationDetails
-import com.example.dosediary.domain.model.ReminderTime
+import com.example.dosediary.domain.model.Intake
 import com.example.dosediary.domain.model.Symptom
 import com.example.dosediary.domain.repository.DrugSearchRepository
 import com.example.dosediary.domain.repository.MedicationRepository
+import com.example.dosediary.domain.repository.ReminderNotifier
+import com.example.dosediary.domain.repository.ReminderPermissions
 import com.example.dosediary.domain.repository.ReminderScheduler
 import com.example.dosediary.domain.repository.SymptomRepository
 import kotlinx.coroutines.flow.Flow
@@ -42,9 +44,9 @@ class FakeMedicationRepository(initial: List<Medication> = emptyList()) : Medica
             if (it.id == id) {
                 it.copy(
                     customUserNickname = details.nickname,
-                    doseAmount = details.doseAmount,
-                    intervalHours = details.intervalHours,
-                    reminderTimes = details.reminderTimes,
+                    frequencyDays = details.frequencyDays,
+                    frequencyStartEpochDay = details.frequencyStartEpochDay,
+                    intakes = details.intakes,
                 )
             } else {
                 it
@@ -68,17 +70,50 @@ class FakeSymptomRepository : SymptomRepository {
     }
 }
 
+/** Records what the scheduler was asked to do, in order. */
 class FakeReminderScheduler : ReminderScheduler {
-    data class Scheduled(val medicationId: String, val name: String, val times: List<ReminderTime>)
+    /** [schedule] calls: the medication as it was passed. */
+    val scheduled = mutableListOf<Medication>()
 
-    val scheduled = mutableListOf<Scheduled>()
-    val cancelled = mutableListOf<String>()
+    data class IntakeCall(val medicationId: String, val intake: Intake, val afterMillis: Long)
 
-    override fun schedule(medicationId: String, medicationName: String, times: List<ReminderTime>) {
-        scheduled += Scheduled(medicationId, medicationName, times)
+    /** [scheduleIntake] calls (what runs after a reminder fired). */
+    val scheduledIntakes = mutableListOf<IntakeCall>()
+
+    /** Medications passed to [cancel], as they were at that moment. */
+    val cancelled = mutableListOf<Medication>()
+
+    override fun schedule(medication: Medication) {
+        scheduled += medication
     }
 
-    override fun cancel(medicationId: String) {
-        cancelled += medicationId
+    override fun scheduleIntake(medication: Medication, intake: Intake, afterMillis: Long) {
+        scheduledIntakes += IntakeCall(medication.id, intake, afterMillis)
     }
+
+    override fun cancel(medication: Medication) {
+        cancelled += medication
+    }
+}
+
+class FakeReminderNotifier : ReminderNotifier {
+    data class Shown(val medicationId: String, val intake: Intake)
+
+    val shown = mutableListOf<Shown>()
+
+    override fun show(medication: Medication, intake: Intake) {
+        shown += Shown(medication.id, intake)
+    }
+}
+
+class FakeReminderPermissions(
+    var canPost: Boolean = true,
+    var canRequest: Boolean = false,
+    var exactNeedsAccess: Boolean = false,
+    var canExact: Boolean = true,
+) : ReminderPermissions {
+    override fun canPostNotifications() = canPost
+    override fun canRequestNotificationPermission() = canRequest
+    override fun exactAlarmsNeedUserAccess() = exactNeedsAccess
+    override fun canScheduleExactAlarms() = canExact
 }

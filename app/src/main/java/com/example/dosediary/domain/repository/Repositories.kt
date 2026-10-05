@@ -4,7 +4,6 @@ import com.example.dosediary.domain.model.AppLanguage
 import com.example.dosediary.domain.model.AppResult
 import com.example.dosediary.domain.model.Medication
 import com.example.dosediary.domain.model.MedicationDetails
-import com.example.dosediary.domain.model.ReminderTime
 import com.example.dosediary.domain.model.Symptom
 import com.example.dosediary.domain.model.UserSettings
 import kotlinx.coroutines.flow.Flow
@@ -58,11 +57,3 @@ interface LanguageManager {
     fun setLanguage(language: AppLanguage)
 }
 
-/** Platform abstraction for scheduling local, repeating medication reminders. */
-interface ReminderScheduler {
-    /** Replaces every reminder of [medicationId] with one daily reminder per entry of [times]. */
-    fun schedule(medicationId: String, medicationName: String, times: List<ReminderTime>)
-
-    /** Removes all reminders of [medicationId]. */
-    fun cancel(medicationId: String)
-}

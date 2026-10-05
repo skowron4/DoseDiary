@@ -40,7 +40,14 @@ object ReminderNotifications {
             PackageManager.PERMISSION_GRANTED
 
     @SuppressLint("MissingPermission") // Guarded by hasPostPermission().
-    fun showReminder(context: Context, medicationId: String, medicationName: String, hour: Int, minute: Int) {
+    fun showReminder(
+        context: Context,
+        medicationId: String,
+        medicationName: String,
+        doseAmount: String?,
+        hour: Int,
+        minute: Int,
+    ) {
         if (!hasPostPermission(context)) return
         val manager = NotificationManagerCompat.from(context)
         if (!manager.areNotificationsEnabled()) return
@@ -63,7 +70,13 @@ object ReminderNotifications {
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle(context.getString(R.string.notification_title))
-            .setContentText(context.getString(R.string.notification_text, medicationName))
+            .setContentText(
+                if (doseAmount.isNullOrBlank()) {
+                    context.getString(R.string.notification_text, medicationName)
+                } else {
+                    context.getString(R.string.notification_text_dose, medicationName, doseAmount)
+                },
+            )
             .setPublicVersion(publicVersion)
             .setCategory(NotificationCompat.CATEGORY_REMINDER)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
@@ -77,8 +90,7 @@ object ReminderNotifications {
 
     /**
      * Stable id of one specific reminder (medication + time of day). Every reminder gets its own
-     * notification, so an afternoon reminder never replaces an unread morning one. Legacy jobs that
-     * carry no time pass -1/-1 and keep a single id per medication.
+     * notification, so an afternoon reminder never replaces an unread morning one.
      */
     fun notificationId(medicationId: String, hour: Int, minute: Int): Int =
         Objects.hash(medicationId, hour, minute)
