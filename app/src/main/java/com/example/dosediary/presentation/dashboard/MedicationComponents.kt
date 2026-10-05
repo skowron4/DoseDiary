@@ -21,6 +21,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -49,6 +50,16 @@ fun MedicationCard(
     onDelete: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    // Formatting times and building the dosage line is not free; redo it only when the data changes.
+    val reminderSummary = remember(medication.reminderTimes) {
+        medication.reminderTimes.takeIf { it.isNotEmpty() }?.joinToString(", ") { it.format() }
+    }
+    val dose = medication.doseAmount?.takeIf { it.isNotBlank() }
+    val interval = medication.intervalHours?.let { stringResource(R.string.dosage_every_hours, it) }
+    val dosage = remember(dose, interval) {
+        listOfNotNull(dose, interval).takeIf { it.isNotEmpty() }?.joinToString(", ")
+    }
+
     Card(modifier = modifier.fillMaxWidth()) {
         Column(
             modifier = Modifier.padding(start = 16.dp, top = 8.dp, end = 4.dp, bottom = 4.dp),
@@ -75,7 +86,7 @@ fun MedicationCard(
                             overflow = TextOverflow.Ellipsis,
                         )
                     }
-                    dosageSummary(medication)?.let {
+                    dosage?.let {
                         Text(
                             text = it,
                             style = MaterialTheme.typography.bodyMedium,
@@ -111,11 +122,8 @@ fun MedicationCard(
                     leadingIcon = { Icon(Icons.Default.Notifications, contentDescription = null, Modifier.size(18.dp)) },
                     label = {
                         Text(
-                            text = if (medication.reminderTimes.isNotEmpty()) {
-                                stringResource(
-                                    R.string.reminder_daily_at,
-                                    medication.reminderTimes.joinToString(", ") { it.format() },
-                                )
+                            text = if (reminderSummary != null) {
+                                stringResource(R.string.reminder_daily_at, reminderSummary)
                             } else {
                                 stringResource(R.string.action_set_reminder)
                             },
@@ -138,14 +146,6 @@ fun MedicationCard(
 
 private val Medication.nicknameOrNull: String?
     get() = customUserNickname?.takeIf { it.isNotBlank() }
-
-/** Quick dosage text such as "2 pills, every 8h"; either part may be missing, both missing gives `null`. */
-@Composable
-private fun dosageSummary(medication: Medication): String? {
-    val dose = medication.doseAmount?.takeIf { it.isNotBlank() }
-    val interval = medication.intervalHours?.let { stringResource(R.string.dosage_every_hours, it) }
-    return listOfNotNull(dose, interval).takeIf { it.isNotEmpty() }?.joinToString(", ")
-}
 
 // --- Previews: open this file in Android Studio's Split/Design view to check the card variants. ---
 

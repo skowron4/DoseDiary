@@ -56,7 +56,7 @@
 
     <!-- Edit medication -->
     <string name="edit_medication_title">Edit medication</string>
-    <string name="nickname_label">Nickname</string>
+    <string name="nickname_label">Custom name</string>
     <string name="nickname_hint_clear">Leave empty to show the commercial name instead.</string>
     <string name="dose_section_title">Dosage</string>
     <string name="dose_amount_label">Dose</string>
@@ -125,7 +125,7 @@
     <string name="error_query_too_short">Please enter at least 2 characters.</string>
     <string name="error_severity_range">Severity must be between 1 and 10.</string>
     <string name="error_notes_too_long">Notes are too long.</string>
-    <string name="error_nickname_too_long">The nickname is too long.</string>
+    <string name="error_nickname_too_long">The custom name is too long.</string>
     <string name="error_dose_too_long">The dose is too long.</string>
     <string name="error_interval_range">Enter a whole number of hours between 1 and 168.</string>
     <string name="error_too_many_reminders">You can set up to 10 reminders per medication.</string>

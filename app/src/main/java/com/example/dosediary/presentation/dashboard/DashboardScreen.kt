@@ -111,12 +111,6 @@ private fun HomeContent(
     onDeleteMedication: (Medication) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val medicationActions = MedicationActions(
-        onLogSymptom = onLogSymptomFor,
-        onEdit = onEditMedication,
-        onDelete = onDeleteMedication,
-    )
-
     LazyColumn(
         modifier = modifier,
         // No top padding: a sticky header would pin *below* it and leave a gap that items scroll through.
@@ -143,22 +137,20 @@ private fun HomeContent(
 
         browseSections(
             state = state,
-            actions = medicationActions,
+            onLogSymptom = onLogSymptomFor,
+            onEdit = onEditMedication,
+            onDelete = onDeleteMedication,
             onOpenSearch = onOpenSearch,
         )
     }
 }
 
-private class MedicationActions(
-    val onLogSymptom: (Medication) -> Unit,
-    val onEdit: (Medication) -> Unit,
-    val onDelete: (Medication) -> Unit,
-)
-
 /** Default content: the saved medications. */
 private fun LazyListScope.browseSections(
     state: DashboardUiState,
-    actions: MedicationActions,
+    onLogSymptom: (Medication) -> Unit,
+    onEdit: (Medication) -> Unit,
+    onDelete: (Medication) -> Unit,
     onOpenSearch: () -> Unit,
 ) {
     when (state) {
@@ -185,19 +177,24 @@ private fun LazyListScope.browseSections(
                     }
                 }
             } else {
-                medicationItems(state.medications, actions)
+                medicationItems(state.medications, onLogSymptom, onEdit, onDelete)
             }
         }
     }
 }
 
-private fun LazyListScope.medicationItems(medications: List<Medication>, actions: MedicationActions) {
+private fun LazyListScope.medicationItems(
+    medications: List<Medication>,
+    onLogSymptom: (Medication) -> Unit,
+    onEdit: (Medication) -> Unit,
+    onDelete: (Medication) -> Unit,
+) {
     items(medications, key = { "med-${it.id}" }, contentType = { "medication" }) { medication ->
         MedicationCard(
             medication = medication,
-            onLogSymptom = { actions.onLogSymptom(medication) },
-            onEdit = { actions.onEdit(medication) },
-            onDelete = { actions.onDelete(medication) },
+            onLogSymptom = { onLogSymptom(medication) },
+            onEdit = { onEdit(medication) },
+            onDelete = { onDelete(medication) },
         )
     }
 }
