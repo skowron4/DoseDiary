@@ -1,5 +1,6 @@
 package com.example.dosediary.presentation.symptom
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -13,20 +14,17 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -37,20 +35,20 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.dosediary.R
-import com.example.dosediary.domain.model.Symptom
 import com.example.dosediary.presentation.common.EmptyState
 import com.example.dosediary.presentation.common.ErrorState
+import com.example.dosediary.presentation.common.ListItemIconAction
 import com.example.dosediary.presentation.common.LoadingState
 import com.example.dosediary.presentation.common.TopLevelContentInsets
-import com.example.dosediary.presentation.common.formatDateTime
-import com.example.dosediary.presentation.common.severityColor
 import org.koin.androidx.compose.koinViewModel
 
 /**
@@ -66,11 +64,14 @@ fun SymptomDiaryScreen(
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
-    var pendingDelete by remember { mutableStateOf<Symptom?>(null) }
+    var pendingDeleteId by remember { mutableStateOf<Long?>(null) }
 
     LaunchedEffect(viewModel) {
         viewModel.messages.collect { snackbarHostState.showSnackbar(it.resolve(context)) }
     }
+    // Item texts are formatted in the ViewModel; tell it when the language may have changed.
+    val locales = LocalConfiguration.current.locales.toLanguageTags()
+    LaunchedEffect(locales) { viewModel.onLocaleMaybeChanged() }
 
     Scaffold(
         contentWindowInsets = TopLevelContentInsets,
@@ -94,27 +95,27 @@ fun SymptomDiaryScreen(
                 is SymptomDiaryUiState.Success -> SymptomList(
                     symptoms = state.symptoms,
                     onEdit = onEditSymptom,
-                    onDelete = { pendingDelete = it },
+                    onDelete = { pendingDeleteId = it },
                 )
             }
         }
     }
 
-    pendingDelete?.let { symptom ->
+    pendingDeleteId?.let { symptomId ->
         AlertDialog(
-            onDismissRequest = { pendingDelete = null },
+            onDismissRequest = { pendingDeleteId = null },
             title = { Text(stringResource(R.string.delete_symptom_title)) },
             text = { Text(stringResource(R.string.delete_symptom_text)) },
             confirmButton = {
                 TextButton(
                     onClick = {
-                        viewModel.removeSymptom(symptom)
-                        pendingDelete = null
+                        viewModel.removeSymptom(symptomId)
+                        pendingDeleteId = null
                     },
                 ) { Text(stringResource(R.string.action_delete)) }
             },
             dismissButton = {
-                TextButton(onClick = { pendingDelete = null }) { Text(stringResource(R.string.action_cancel)) }
+                TextButton(onClick = { pendingDeleteId = null }) { Text(stringResource(R.string.action_cancel)) }
             },
         )
     }
@@ -122,10 +123,13 @@ fun SymptomDiaryScreen(
 
 @Composable
 private fun SymptomList(
-    symptoms: List<Symptom>,
+    symptoms: List<SymptomItemUi>,
     onEdit: (symptomId: Long) -> Unit,
-    onDelete: (Symptom) -> Unit,
+    onDelete: (symptomId: Long) -> Unit,
 ) {
+    // Resolved once for the whole list, not once per card.
+    val deleteDescription = stringResource(R.string.action_delete)
+
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         // Bottom padding keeps the last card clear of the floating button.
@@ -150,72 +154,86 @@ private fun SymptomList(
         } else {
             items(symptoms, key = { "symptom-${it.id}" }, contentType = { "symptom" }) { symptom ->
                 SymptomCard(
-                    symptom = symptom,
-                    onClick = { onEdit(symptom.id) },
-                    onDelete = { onDelete(symptom) },
+                    item = symptom,
+                    deleteDescription = deleteDescription,
+                    onClick = onEdit,
+                    onDelete = onDelete,
                 )
             }
         }
     }
 }
 
+private val CardShape = RoundedCornerShape(12.dp)
+
+/**
+ * One logged symptom, built only from plain boxes, rows and text (no Material `Card`, `Surface` or
+ * `IconButton`, no flow layouts). Receives final strings in [SymptomItemUi]; nothing is formatted here.
+ */
 @Composable
 private fun SymptomCard(
-    symptom: Symptom,
-    onClick: () -> Unit,
-    onDelete: () -> Unit,
+    item: SymptomItemUi,
+    deleteDescription: String,
+    onClick: (symptomId: Long) -> Unit,
+    onDelete: (symptomId: Long) -> Unit,
 ) {
-    Card(
+    val colors = MaterialTheme.colorScheme
+    val typography = MaterialTheme.typography
+
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
+            .clip(CardShape)
+            .background(colors.surfaceContainerHigh)
+            .clickable { onClick(item.id) }
+            .padding(start = 16.dp, top = 12.dp, bottom = 12.dp, end = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Row(
-            modifier = Modifier.padding(start = 16.dp, top = 12.dp, bottom = 12.dp, end = 4.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            SeverityBadge(symptom.severity)
-            Column(Modifier.weight(1f)) {
+        SeverityBadge(text = item.severityText, color = item.severityColor)
+        Column(Modifier.weight(1f)) {
+            Text(
+                text = item.title,
+                style = typography.titleSmall,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                text = item.dateText,
+                style = typography.labelMedium,
+                color = colors.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            SymptomTagRow(
+                tags = item.tags,
+                hiddenText = item.hiddenTagsText,
+                modifier = Modifier.padding(top = 6.dp),
+            )
+            item.notes?.let {
                 Text(
-                    text = symptom.medicationName ?: stringResource(R.string.symptom_general),
-                    style = MaterialTheme.typography.titleSmall,
+                    text = it,
+                    style = typography.bodyMedium,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.padding(top = 4.dp),
                 )
-                Text(
-                    text = formatDateTime(symptom.loggedAtMillis),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                SymptomTagRow(tags = symptom.tags, modifier = Modifier.padding(top = 6.dp))
-                if (symptom.notes.isNotBlank()) {
-                    Text(
-                        text = symptom.notes,
-                        style = MaterialTheme.typography.bodyMedium,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.padding(top = 4.dp),
-                    )
-                }
-            }
-            IconButton(onClick = onDelete) {
-                Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.action_delete))
             }
         }
+        ListItemIconAction(Icons.Default.Delete, deleteDescription, onClick = { onDelete(item.id) })
     }
 }
 
+/** A colored disc with the severity number (a `Box` with a background instead of a Material `Surface`). */
 @Composable
-private fun SeverityBadge(severity: Int) {
+private fun SeverityBadge(text: String, color: Color) {
     // Same green -> yellow -> red scale as the severity slider; every stop is light enough for dark text.
-    Surface(
-        shape = CircleShape,
-        color = severityColor(severity),
-        contentColor = Color.Black,
-        modifier = Modifier.size(44.dp),
+    Box(
+        modifier = Modifier
+            .size(44.dp)
+            .background(color, CircleShape),
+        contentAlignment = Alignment.Center,
     ) {
-        Box(contentAlignment = Alignment.Center) {
-            Text(severity.toString(), style = MaterialTheme.typography.titleMedium)
-        }
+        Text(text = text, style = MaterialTheme.typography.titleMedium, color = Color.Black)
     }
 }

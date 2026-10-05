@@ -1,85 +1,81 @@
 package com.example.dosediary.presentation.symptom
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.ContextualFlowRow
-import androidx.compose.foundation.layout.ContextualFlowRowOverflow
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.dosediary.R
-import com.example.dosediary.domain.model.SymptomTag
-import com.example.dosediary.presentation.common.labelRes
 import com.example.dosediary.ui.theme.DoseDiaryTheme
 
+private val ChipShape = RoundedCornerShape(8.dp)
+
 /**
- * Read-only chips for the tags of a symptom entry, limited to a single row.
+ * Read-only tag chips of a symptom entry in one plain [Row].
  *
- * Tags that do not fit are not wrapped onto more lines; they are replaced by a "+N" chip, where N is
- * the number of hidden tags. The indicator reserves its own space, so it is always visible.
+ * There is no wrapping and no "how many fit?" measurement. [SymptomItemUi] already limits the list to
+ * a few tags and supplies the "+N" text, so this only places them: each tag chip may shrink and
+ * truncate to one line (`weight(fill = false)`), while the "+N" chip keeps its natural width and is
+ * always visible.
  *
- * This uses [ContextualFlowRow] rather than `FlowRow`: the "+N" chip needs the number of shown items,
- * and `FlowRow` only allows reading it in the draw phase (reading it while composing throws
- * `IllegalStateException: Accessing noOfItemsShown before it is set`). `ContextualFlowRow` provides it
- * during composition.
+ * Chips are a single `Text` with a background; there is no Material `Surface`/`AssistChip` per tag.
+ *
+ * @param tags Final, localised labels.
+ * @param hiddenText "+N" for tags that are not listed, or `null`.
  */
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun SymptomTagRow(
-    tags: Collection<SymptomTag>,
+    tags: List<String>,
+    hiddenText: String?,
     modifier: Modifier = Modifier,
 ) {
     if (tags.isEmpty()) return
-    val ordered = remember(tags) { tags.toList() }
 
-    ContextualFlowRow(
-        itemCount = ordered.size,
-        modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
-        maxLines = 1,
-        overflow = ContextualFlowRowOverflow.expandIndicator {
-            TagChip(text = stringResource(R.string.symptom_tags_more, totalItemCount - shownItemCount))
-        },
-    ) { index ->
-        TagChip(text = stringResource(ordered[index].labelRes()))
+    Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        for (tag in tags) {
+            TagChip(text = tag, modifier = Modifier.weight(1f, fill = false))
+        }
+        if (hiddenText != null) TagChip(text = hiddenText)
     }
 }
+
 @Composable
-private fun TagChip(text: String) {
-    Surface(
-        shape = RoundedCornerShape(8.dp),
-        color = MaterialTheme.colorScheme.secondaryContainer,
-        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-    ) {
-        Text(
-            text = text,
-            style = MaterialTheme.typography.labelMedium,
-            maxLines = 1,
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-        )
-    }
+private fun TagChip(text: String, modifier: Modifier = Modifier) {
+    val colors = MaterialTheme.colorScheme
+    Text(
+        text = text,
+        style = MaterialTheme.typography.labelMedium,
+        color = colors.onSecondaryContainer,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+        modifier = modifier
+            .background(colors.secondaryContainer, ChipShape)
+            .padding(horizontal = 8.dp, vertical = 4.dp),
+    )
 }
 
 @Preview(name = "Few tags", showBackground = true, widthDp = 320)
 @Composable
 private fun SymptomTagRowFewPreview() {
     DoseDiaryTheme(dynamicColor = false) {
-        SymptomTagRow(listOf(SymptomTag.HEADACHE, SymptomTag.NAUSEA), Modifier.padding(16.dp))
+        SymptomTagRow(listOf("Headache", "Nausea"), hiddenText = null, modifier = Modifier.padding(16.dp))
     }
 }
 
-@Preview(name = "Overflow shows +N", showBackground = true, widthDp = 320)
+@Preview(name = "More tags show +N", showBackground = true, widthDp = 320)
 @Composable
 private fun SymptomTagRowOverflowPreview() {
     DoseDiaryTheme(dynamicColor = false) {
-        SymptomTagRow(SymptomTag.entries, Modifier.padding(16.dp))
+        SymptomTagRow(
+            listOf("Headache", "Nausea", "Stomach pain"),
+            hiddenText = "+7",
+            modifier = Modifier.padding(16.dp),
+        )
     }
 }
