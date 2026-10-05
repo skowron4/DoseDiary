@@ -9,6 +9,14 @@ plugins {
 }
 
 android {
+    signingConfigs {
+        create("release") {
+            storeFile = file("C:\\Users\\Public\\Documents\\key1.jks")
+            keyAlias = "key1"
+            storePassword = "mojKlucz"
+            keyPassword = "mojKlucz"
+        }
+    }
     namespace = "com.example.dosediary"
     compileSdk = 35
 
@@ -33,6 +41,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.getByName("release")
         }
     }
     compileOptions {
