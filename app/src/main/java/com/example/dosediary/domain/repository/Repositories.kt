@@ -2,6 +2,7 @@ package com.example.dosediary.domain.repository
 
 import com.example.dosediary.domain.model.AppResult
 import com.example.dosediary.domain.model.Medication
+import com.example.dosediary.domain.model.MedicationDetails
 import com.example.dosediary.domain.model.ReminderTime
 import com.example.dosediary.domain.model.Symptom
 import com.example.dosediary.domain.model.UserSettings
@@ -18,8 +19,7 @@ interface MedicationRepository {
     suspend fun getMedication(id: String): Medication?
     suspend fun saveMedication(medication: Medication)
     suspend fun deleteMedication(id: String)
-    suspend fun updateReminder(id: String, time: ReminderTime?)
-    suspend fun updateNickname(id: String, nickname: String?)
+    suspend fun updateDetails(id: String, details: MedicationDetails)
 }
 
 /** Symptom journal. */
@@ -38,8 +38,19 @@ interface SettingsRepository {
     suspend fun setScreenProtectionEnabled(enabled: Boolean)
 }
 
+/** Recently submitted search queries, most recent first. */
+interface SearchHistoryRepository {
+    fun observeHistory(): Flow<List<String>>
+    suspend fun addQuery(query: String)
+    suspend fun removeQuery(query: String)
+    suspend fun clear()
+}
+
 /** Platform abstraction for scheduling local, repeating medication reminders. */
 interface ReminderScheduler {
-    fun schedule(medicationId: String, medicationName: String, time: ReminderTime)
+    /** Replaces every reminder of [medicationId] with one daily reminder per entry of [times]. */
+    fun schedule(medicationId: String, medicationName: String, times: List<ReminderTime>)
+
+    /** Removes all reminders of [medicationId]. */
     fun cancel(medicationId: String)
 }

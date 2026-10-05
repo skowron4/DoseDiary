@@ -13,7 +13,7 @@
     <string name="action_clear">Clear</string>
     <string name="action_back">Back</string>
     <string name="action_unlock">Unlock</string>
-    <string name="action_edit_nickname">Edit nickname</string>
+    <string name="action_edit_medication">Edit medication</string>
 
     <!-- Lock / biometrics -->
     <string name="lock_title">DoseDiary is locked</string>
@@ -30,13 +30,10 @@
     <string name="symptoms_empty">No symptoms logged yet. Tap “Log symptom” to add one.</string>
     <string name="action_find_medications">Find medications</string>
     <string name="action_log_symptom">Log symptom</string>
-    <string name="action_set_reminder">Set daily reminder</string>
+    <string name="action_set_reminder">Add reminders</string>
     <string name="symptom_general">General (no medication)</string>
     <string name="reminder_daily_at">Daily at %1$s</string>
-    <string name="reminder_dialog_title">Daily reminder time</string>
-    <string name="reminder_set">Reminder for %1$s set for %2$s daily</string>
-    <string name="reminder_set_no_permission">Reminder saved for %1$s, but notifications are turned off, so you will not be alerted.</string>
-    <string name="reminder_cleared">Reminder for %1$s removed</string>
+    <string name="dosage_every_hours">every %1$dh</string>
     <string name="medication_removed">%1$s removed</string>
     <string name="symptom_removed">Symptom entry deleted</string>
     <string name="delete_medication_title">Remove medication?</string>
@@ -44,18 +41,34 @@
     <string name="delete_symptom_title">Delete symptom entry?</string>
     <string name="delete_symptom_text">This entry will be permanently deleted.</string>
 
-    <!-- Search (sticky bar on Home) -->
+    <!-- Search (entry bar on Home + full-screen overlay) -->
     <string name="search_hint">Search medications (e.g. Advil)</string>
+    <string name="search_recent">Recent searches</string>
+    <string name="search_clear_history">Clear all</string>
+    <string name="search_remove_history_item">Remove “%1$s” from recent searches</string>
     <string name="section_in_my_diary">In my diary</string>
     <string name="section_openfda">From the OpenFDA database</string>
     <string name="search_no_local_matches">None of your saved medications match.</string>
 
-    <!-- Nickname -->
-    <string name="nickname_dialog_title">Medication nickname</string>
+    <!-- Edit medication -->
+    <string name="edit_medication_title">Edit medication</string>
     <string name="nickname_label">Nickname</string>
     <string name="nickname_original_name">Commercial name: %1$s</string>
     <string name="nickname_hint_clear">Leave empty to show the commercial name instead.</string>
-    <string name="nickname_saved">Nickname updated</string>
+    <string name="dose_section_title">Dosage</string>
+    <string name="dose_amount_label">Dose</string>
+    <string name="dose_amount_placeholder">e.g. 2 pills</string>
+    <string name="dose_interval_label">Repeat every (hours)</string>
+    <string name="dose_interval_suffix">h</string>
+    <string name="reminders_section_title">Daily reminders</string>
+    <string name="reminders_empty">No reminders yet.</string>
+    <string name="action_add_reminder">Add reminder</string>
+    <string name="action_remove_reminder">Remove reminder at %1$s</string>
+    <string name="reminder_dialog_title">Reminder time</string>
+    <string name="action_add">Add</string>
+    <string name="medication_updated">Changes saved</string>
+    <string name="reminders_saved_no_permission">Saved, but notifications are turned off, so you will not be alerted.</string>
+    <string name="error_medication_load_failed">This medication could not be found.</string>
     <string name="search_idle">Type at least 2 letters to search the OpenFDA drug database.</string>
     <string name="search_no_results">No medications found. Check the spelling or try another brand name.</string>
     <string name="action_save_medication">Save to my diary</string>
@@ -96,6 +109,9 @@
     <string name="error_severity_range">Severity must be between 1 and 10.</string>
     <string name="error_notes_too_long">Notes are too long.</string>
     <string name="error_nickname_too_long">The nickname is too long.</string>
+    <string name="error_dose_too_long">The dose is too long.</string>
+    <string name="error_interval_range">Enter a whole number of hours between 1 and 168.</string>
+    <string name="error_too_many_reminders">You can set up to 10 reminders per medication.</string>
     <string name="error_medication_not_found">That medication is no longer in your diary.</string>
     <string name="error_storage">Could not access local storage. Please try again.</string>
     <string name="error_unknown">Something went wrong. Please try again.</string>

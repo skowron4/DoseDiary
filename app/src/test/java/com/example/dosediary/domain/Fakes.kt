@@ -2,6 +2,7 @@ package com.example.dosediary.domain
 
 import com.example.dosediary.domain.model.AppResult
 import com.example.dosediary.domain.model.Medication
+import com.example.dosediary.domain.model.MedicationDetails
 import com.example.dosediary.domain.model.ReminderTime
 import com.example.dosediary.domain.model.Symptom
 import com.example.dosediary.domain.repository.DrugSearchRepository
@@ -36,15 +37,21 @@ class FakeMedicationRepository(initial: List<Medication> = emptyList()) : Medica
         items.value = items.value.filterNot { it.id == id }
     }
 
-    override suspend fun updateReminder(id: String, time: ReminderTime?) {
-        items.value = items.value.map { if (it.id == id) it.copy(reminderTime = time) else it }
-    }
-
-    override suspend fun updateNickname(id: String, nickname: String?) {
-        items.value = items.value.map { if (it.id == id) it.copy(customUserNickname = nickname) else it }
+    override suspend fun updateDetails(id: String, details: MedicationDetails) {
+        items.value = items.value.map {
+            if (it.id == id) {
+                it.copy(
+                    customUserNickname = details.nickname,
+                    doseAmount = details.doseAmount,
+                    intervalHours = details.intervalHours,
+                    reminderTimes = details.reminderTimes,
+                )
+            } else {
+                it
+            }
+        }
     }
 }
-
 class FakeSymptomRepository : SymptomRepository {
     private val items = MutableStateFlow<List<Symptom>>(emptyList())
     private var nextId = 1L
@@ -62,13 +69,13 @@ class FakeSymptomRepository : SymptomRepository {
 }
 
 class FakeReminderScheduler : ReminderScheduler {
-    data class Scheduled(val medicationId: String, val name: String, val time: ReminderTime)
+    data class Scheduled(val medicationId: String, val name: String, val times: List<ReminderTime>)
 
     val scheduled = mutableListOf<Scheduled>()
     val cancelled = mutableListOf<String>()
 
-    override fun schedule(medicationId: String, medicationName: String, time: ReminderTime) {
-        scheduled += Scheduled(medicationId, medicationName, time)
+    override fun schedule(medicationId: String, medicationName: String, times: List<ReminderTime>) {
+        scheduled += Scheduled(medicationId, medicationName, times)
     }
 
     override fun cancel(medicationId: String) {

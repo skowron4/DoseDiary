@@ -8,11 +8,12 @@ import androidx.room.migration.AutoMigrationSpec
 import com.example.dosediary.data.local.dao.MedicationDao
 import com.example.dosediary.data.local.dao.SymptomDao
 import com.example.dosediary.data.local.entity.MedicationEntity
+import com.example.dosediary.data.local.entity.MedicationReminderEntity
 import com.example.dosediary.data.local.entity.SymptomEntity
 
 @Database(
-    entities = [MedicationEntity::class, SymptomEntity::class],
-    version = 2,
+    entities = [MedicationEntity::class, MedicationReminderEntity::class, SymptomEntity::class],
+    version = 3,
     exportSchema = true,
     autoMigrations = [
         AutoMigration(from = 1, to = 2, spec = AppDatabase.Migration1To2::class),

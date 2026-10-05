@@ -29,6 +29,9 @@ fun DomainError.messageRes(): Int = when (this) {
         ValidationReason.SEVERITY_OUT_OF_RANGE -> R.string.error_severity_range
         ValidationReason.NOTES_TOO_LONG -> R.string.error_notes_too_long
         ValidationReason.NICKNAME_TOO_LONG -> R.string.error_nickname_too_long
+        ValidationReason.DOSE_TOO_LONG -> R.string.error_dose_too_long
+        ValidationReason.INTERVAL_OUT_OF_RANGE -> R.string.error_interval_range
+        ValidationReason.TOO_MANY_REMINDERS -> R.string.error_too_many_reminders
         ValidationReason.MEDICATION_NOT_FOUND -> R.string.error_medication_not_found
     }
     DomainError.Storage -> R.string.error_storage

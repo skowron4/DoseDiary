@@ -1,10 +1,12 @@
 package com.example.dosediary.data.local.entity
 
 import androidx.room.ColumnInfo
+import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import androidx.room.Relation
 
 @Entity(tableName = "medications")
 data class MedicationEntity(
@@ -15,9 +17,36 @@ data class MedicationEntity(
     val customUserNickname: String?,
     val purpose: String?,
     val route: String?,
-    val reminderHour: Int?,
-    val reminderMinute: Int?,
+    val doseAmount: String?,
+    val intervalHours: Int?,
     val savedAtMillis: Long,
+)
+
+/** One daily reminder time of a medication. Removed together with its medication. */
+@Entity(
+    tableName = "medication_reminders",
+    foreignKeys = [
+        ForeignKey(
+            entity = MedicationEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["medicationId"],
+            onDelete = ForeignKey.CASCADE,
+        ),
+    ],
+    indices = [Index(value = ["medicationId", "hour", "minute"], unique = true)],
+)
+data class MedicationReminderEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val medicationId: String,
+    val hour: Int,
+    val minute: Int,
+)
+
+/** A medication together with its reminder times. */
+data class MedicationWithReminders(
+    @Embedded val medication: MedicationEntity,
+    @Relation(parentColumn = "id", entityColumn = "medicationId")
+    val reminders: List<MedicationReminderEntity>,
 )
 
 @Entity(
