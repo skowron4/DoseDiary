@@ -5,6 +5,9 @@ import kotlinx.serialization.Serializable
 /** Type-safe navigation destinations. */
 @Serializable data object DashboardRoute
 
+/** Symptom diary tab: the chronological symptom log. */
+@Serializable data object SymptomDiaryRoute
+
 @Serializable data object SettingsRoute
 
 /** Full-screen search overlay (recent searches, saved matches and OpenFDA results). */

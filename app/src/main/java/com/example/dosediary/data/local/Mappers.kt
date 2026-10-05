@@ -8,6 +8,7 @@ import com.example.dosediary.data.local.entity.SymptomWithMedication
 import com.example.dosediary.domain.model.Medication
 import com.example.dosediary.domain.model.ReminderTime
 import com.example.dosediary.domain.model.Symptom
+import com.example.dosediary.domain.model.SymptomTag
 
 fun MedicationWithReminders.toDomain(): Medication = Medication(
     id = medication.id,
@@ -43,6 +44,7 @@ fun SymptomWithMedication.toDomain(): Symptom = Symptom(
     medicationId = medicationId,
     medicationName = medicationName,
     severity = severity,
+    tags = SymptomTag.decode(tags),
     notes = notes,
     loggedAtMillis = loggedAtMillis,
 )
@@ -53,4 +55,5 @@ fun Symptom.toEntity(): SymptomEntity = SymptomEntity(
     severity = severity,
     notes = notes,
     loggedAtMillis = loggedAtMillis,
+    tags = SymptomTag.encode(tags),
 )

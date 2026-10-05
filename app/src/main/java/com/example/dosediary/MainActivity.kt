@@ -11,7 +11,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.fragment.app.FragmentActivity
+import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.dosediary.presentation.app.AppViewModel
 import com.example.dosediary.presentation.app.LockScreen
@@ -24,12 +24,13 @@ import com.example.dosediary.ui.theme.DoseDiaryTheme
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 /**
- * Single-activity host. Extends [FragmentActivity] because BiometricPrompt requires one.
+ * Single-activity host. Extends [AppCompatActivity] (a FragmentActivity, as BiometricPrompt requires)
+ * so that per-app language changes also work on Android 8-12.
  *
  * Until the user is authenticated no diary content is composed at all, so nothing sensitive is
  * ever in the view hierarchy while locked.
  */
-class MainActivity : FragmentActivity() {
+class MainActivity : AppCompatActivity() {
 
     private val appViewModel: AppViewModel by viewModel()
 

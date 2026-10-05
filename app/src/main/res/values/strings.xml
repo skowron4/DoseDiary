@@ -1,8 +1,13 @@
 <resources>
-    <string name="app_name">DoseDiary</string>
+    <string name="app_name" translatable="false">DoseDiary</string>
+
+    <!-- "current / maximum" counters (severity, character limits). Kept as a resource so a locale can reorder it. -->
+    <string name="symptom_tags_more" translatable="false">+%1$d</string>
+    <string name="counter_of" translatable="false">%1$d / %2$d</string>
 
     <!-- Navigation -->
-    <string name="nav_dashboard">Home</string>
+    <string name="nav_dashboard">Medications</string>
+    <string name="nav_symptoms">Symptoms</string>
     <string name="nav_settings">Settings</string>
 
     <!-- Common actions -->
@@ -22,10 +27,9 @@
     <string name="biometric_subtitle">Use your fingerprint, face, or screen lock</string>
     <string name="biometric_unavailable">Authentication is temporarily unavailable. Please try again.</string>
 
-    <!-- Dashboard -->
-    <string name="dashboard_title">My diary</string>
-    <string name="section_medications">My medications</string>
-    <string name="section_symptoms">Symptom log</string>
+    <!-- Medications tab -->
+    <string name="dashboard_title">My medications</string>
+    <string name="symptoms_title">Symptom diary</string>
     <string name="medications_empty">You have not saved any medications yet.</string>
     <string name="symptoms_empty">No symptoms logged yet. Tap “Log symptom” to add one.</string>
     <string name="action_find_medications">Find medications</string>
@@ -53,7 +57,6 @@
     <!-- Edit medication -->
     <string name="edit_medication_title">Edit medication</string>
     <string name="nickname_label">Nickname</string>
-    <string name="nickname_original_name">Commercial name: %1$s</string>
     <string name="nickname_hint_clear">Leave empty to show the commercial name instead.</string>
     <string name="dose_section_title">Dosage</string>
     <string name="dose_amount_label">Dose</string>
@@ -82,7 +85,21 @@
     <string name="severity_label">Severity</string>
     <string name="severity_mild">1 – Mild</string>
     <string name="severity_severe">10 – Severe</string>
-    <string name="notes_label">Notes (optional)</string>
+    <string name="severity_level_mild">Mild</string>
+    <string name="severity_level_moderate">Moderate</string>
+    <string name="severity_level_severe">Severe</string>
+    <string name="quick_tags_label">What are you feeling?</string>
+    <string name="tag_headache">Headache</string>
+    <string name="tag_nausea">Nausea</string>
+    <string name="tag_fatigue">Fatigue</string>
+    <string name="tag_fever">Fever</string>
+    <string name="tag_dizziness">Dizziness</string>
+    <string name="tag_stomach_pain">Stomach pain</string>
+    <string name="tag_cough">Cough</string>
+    <string name="tag_rash">Rash</string>
+    <string name="tag_insomnia">Insomnia</string>
+    <string name="tag_muscle_pain">Muscle pain</string>
+    <string name="notes_label">Additional notes (optional)</string>
     <string name="error_symptom_not_found">This symptom entry could not be found.</string>
 
     <!-- Settings -->

@@ -5,6 +5,7 @@ import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStoreFile
 import androidx.work.WorkManager
+import com.example.dosediary.data.locale.AppCompatLanguageManager
 import com.example.dosediary.data.preferences.DataStoreSearchHistoryRepository
 import com.example.dosediary.data.preferences.DataStoreSettingsRepository
 import com.example.dosediary.data.repository.DrugSearchRepositoryImpl
@@ -12,6 +13,7 @@ import com.example.dosediary.data.repository.MedicationRepositoryImpl
 import com.example.dosediary.data.repository.SymptomRepositoryImpl
 import com.example.dosediary.data.worker.WorkManagerReminderScheduler
 import com.example.dosediary.domain.repository.DrugSearchRepository
+import com.example.dosediary.domain.repository.LanguageManager
 import com.example.dosediary.domain.repository.MedicationRepository
 import com.example.dosediary.domain.repository.ReminderScheduler
 import com.example.dosediary.domain.repository.SearchHistoryRepository
@@ -42,6 +44,7 @@ import com.example.dosediary.presentation.medication.EditMedicationViewModel
 import com.example.dosediary.presentation.search.SearchViewModel
 import com.example.dosediary.presentation.settings.SettingsViewModel
 import com.example.dosediary.presentation.symptom.AddSymptomViewModel
+import com.example.dosediary.presentation.symptom.SymptomDiaryViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -65,6 +68,7 @@ val appModule = module {
     single<MedicationRepository> { MedicationRepositoryImpl(dao = get(), clock = get()) }
     single<SymptomRepository> { SymptomRepositoryImpl(dao = get()) }
     single<SettingsRepository> { DataStoreSettingsRepository(dataStore = get()) }
+    single<LanguageManager> { AppCompatLanguageManager() }
     single<SearchHistoryRepository> { DataStoreSearchHistoryRepository(dataStore = get()) }
     single<ReminderScheduler> { WorkManagerReminderScheduler(workManager = get()) }
 
@@ -93,11 +97,10 @@ val appModule = module {
     viewModel {
         DashboardViewModel(
             observeMedications = get(),
-            observeSymptoms = get(),
             deleteMedication = get(),
-            deleteSymptom = get(),
         )
     }
+    viewModel { SymptomDiaryViewModel(observeSymptoms = get(), deleteSymptom = get()) }
     viewModel { params ->
         EditMedicationViewModel(
             medicationId = params.get<String>(),

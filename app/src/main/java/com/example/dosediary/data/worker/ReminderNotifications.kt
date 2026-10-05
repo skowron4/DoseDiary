@@ -14,6 +14,7 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import com.example.dosediary.MainActivity
 import com.example.dosediary.R
+import java.util.Objects
 
 /** Creates the reminder notification channel and posts reminder notifications. */
 object ReminderNotifications {
@@ -39,14 +40,15 @@ object ReminderNotifications {
             PackageManager.PERMISSION_GRANTED
 
     @SuppressLint("MissingPermission") // Guarded by hasPostPermission().
-    fun showReminder(context: Context, medicationId: String, medicationName: String) {
+    fun showReminder(context: Context, medicationId: String, medicationName: String, hour: Int, minute: Int) {
         if (!hasPostPermission(context)) return
         val manager = NotificationManagerCompat.from(context)
         if (!manager.areNotificationsEnabled()) return
 
+        val id = notificationId(medicationId, hour, minute)
         val contentIntent = PendingIntent.getActivity(
             context,
-            medicationId.hashCode(),
+            id,
             Intent(context, MainActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
             },
@@ -70,6 +72,14 @@ object ReminderNotifications {
             .setAutoCancel(true)
             .build()
 
-        manager.notify(medicationId.hashCode(), notification)
+        manager.notify(id, notification)
     }
+
+    /**
+     * Stable id of one specific reminder (medication + time of day). Every reminder gets its own
+     * notification, so an afternoon reminder never replaces an unread morning one. Legacy jobs that
+     * carry no time pass -1/-1 and keep a single id per medication.
+     */
+    fun notificationId(medicationId: String, hour: Int, minute: Int): Int =
+        Objects.hash(medicationId, hour, minute)
 }

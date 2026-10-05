@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Navigation -->
+    <string name="nav_dashboard">Leki</string>
+    <string name="nav_symptoms">Objawy</string>
+    <string name="nav_settings">Ustawienia</string>
+
+    <!-- Common actions -->
+    <string name="action_retry">Spróbuj ponownie</string>
+    <string name="action_save">Zapisz</string>
+    <string name="action_cancel">Anuluj</string>
+    <string name="action_delete">Usuń</string>
+    <string name="action_clear">Wyczyść</string>
+    <string name="action_back">Wstecz</string>
+    <string name="action_unlock">Odblokuj</string>
+    <string name="action_edit_medication">Edytuj lek</string>
+
+    <!-- Lock / biometrics -->
+    <string name="lock_title">DoseDiary jest zablokowana</string>
+    <string name="lock_subtitle">Uwierzytelnij się, aby otworzyć swój dziennik zdrowia.</string>
+    <string name="biometric_title">Odblokuj DoseDiary</string>
+    <string name="biometric_subtitle">Użyj odcisku palca, twarzy lub blokady ekranu</string>
+    <string name="biometric_unavailable">Uwierzytelnianie jest chwilowo niedostępne. Spróbuj ponownie.</string>
+
+    <!-- Dashboard -->
+    <string name="dashboard_title">Moje leki</string>
+    <string name="symptoms_title">Dziennik objawów</string>
+    <string name="medications_empty">Nie zapisano jeszcze żadnych leków.</string>
+    <string name="symptoms_empty">Nie zapisano jeszcze żadnych objawów. Kliknij „Dodaj objaw”, aby dodać pierwszy.</string>
+    <string name="action_find_medications">Znajdź leki</string>
+    <string name="action_log_symptom">Dodaj objaw</string>
+    <string name="action_set_reminder">Dodaj przypomnienia</string>
+    <string name="symptom_general">Ogólne (bez leku)</string>
+    <string name="reminder_daily_at">Codziennie o %1$s</string>
+    <string name="dosage_every_hours">co %1$d h</string>
+    
+    <string name="medication_removed">Usunięto lek %1$s</string>
+    <string name="symptom_removed">Usunięto wpis objawu</string>
+    <string name="delete_medication_title">Usunąć lek?</string>
+    <string name="delete_medication_text">Lek %1$s i jego przypomnienie zostaną usunięte. Historia objawów zostanie zachowana.</string>
+    <string name="delete_symptom_title">Usunąć wpis objawu?</string>
+    <string name="delete_symptom_text">Ten wpis zostanie trwale usunięty.</string>
+
+    <!-- Search (entry bar on Home + full-screen overlay) -->
+    <string name="search_hint">Szukaj leków (np. Advil)</string>
+    <string name="search_recent">Ostatnie wyszukiwania</string>
+    <string name="search_clear_history">Wyczyść wszystko</string>
+    <string name="search_remove_history_item">Usuń „%1$s” z ostatnich wyszukiwań</string>
+    <string name="section_in_my_diary">W moim dzienniku</string>
+    <string name="section_openfda">Z bazy danych OpenFDA</string>
+    <string name="search_no_local_matches">Żaden z zapisanych leków nie pasuje.</string>
+
+    <!-- Edit medication -->
+    <string name="edit_medication_title">Edytuj lek</string>
+    <string name="dose_section_title">Dawkowanie</string>
+    <string name="dose_amount_label">Dawka</string>
+    <string name="dose_amount_placeholder">np. 2 tabletki</string>
+    <string name="dose_interval_label">Co ile godzin</string>
+    <string name="dose_interval_suffix">h</string>
+    <string name="reminders_section_title">Codzienne przypomnienia</string>
+    <string name="reminders_empty">Brak przypomnień.</string>
+    <string name="action_add_reminder">Dodaj przypomnienie</string>
+    <string name="action_remove_reminder">Usuń przypomnienie o %1$s</string>
+    <string name="reminder_dialog_title">Godzina przypomnienia</string>
+    <string name="action_add">Dodaj</string>
+    <string name="medication_updated">Zapisano zmiany</string>
+    <string name="reminders_saved_no_permission">Zapisano, ale powiadomienia są wyłączone, więc nie otrzymasz alertu.</string>
+    <string name="error_medication_load_failed">Nie znaleziono tego leku.</string>    <string name="nickname_label">Pseudonim</string>
+    <string name="nickname_hint_clear">Zostaw puste, aby zamiast tego wyświetlać nazwę handlową.</string>
+    <string name="search_idle">Wpisz co najmniej 2 litery, aby przeszukać bazę leków OpenFDA.</string>
+    <string name="search_no_results">Nie znaleziono leków. Sprawdź pisownię lub spróbuj innej nazwy handlowej.</string>
+    <string name="action_save_medication">Zapisz w dzienniku</string>
+    <string name="action_saved">Zapisano</string>
+    <string name="medication_saved">Zapisano lek %1$s w dzienniku</string>
+
+    <!-- Add / edit symptom -->
+    <string name="add_symptom_title">Dodaj objaw</string>
+    <string name="edit_symptom_title">Edytuj objaw</string>
+    <string name="related_medication_label">Powiązany lek</string>
+    <string name="severity_label">Nasilenie</string>
+    <string name="severity_mild">1 – łagodne</string>
+    <string name="severity_severe">10 – silne</string>
+    <string name="severity_level_mild">Łagodne</string>
+    <string name="severity_level_moderate">Umiarkowane</string>
+    <string name="severity_level_severe">Silne</string>
+    <string name="quick_tags_label">Jak się czujesz?</string>
+    <string name="tag_headache">Ból głowy</string>
+    <string name="tag_nausea">Nudności</string>
+    <string name="tag_fatigue">Zmęczenie</string>
+    <string name="tag_fever">Gorączka</string>
+    <string name="tag_dizziness">Zawroty głowy</string>
+    <string name="tag_stomach_pain">Ból brzucha</string>
+    <string name="tag_cough">Kaszel</string>
+    <string name="tag_rash">Wysypka</string>
+    <string name="tag_insomnia">Bezsenność</string>
+    <string name="tag_muscle_pain">Ból mięśni</string>
+    <string name="notes_label">Dodatkowe notatki (opcjonalnie)</string>
+    <string name="error_symptom_not_found">Nie znaleziono tego wpisu objawu.</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Ustawienia</string>
+    <string name="setting_dark_mode">Tryb ciemny</string>
+    <string name="setting_dark_mode_desc">Używaj ciemnego motywu kolorystycznego</string>
+    <string name="setting_biometrics">Blokada biometryczna</string>
+    <string name="setting_biometrics_desc">Wymagaj odcisku palca, twarzy lub blokady ekranu, aby otworzyć dziennik</string>
+    <string name="setting_screen_protection">Blokuj zrzuty ekranu</string>
+    <string name="setting_screen_protection_desc">Ukryj aplikację przed zrzutami ekranu, nagrywaniem ekranu i podglądem w ostatnich aplikacjach</string>
+
+    <!-- Notifications -->
+    <string name="notification_channel_name">Przypomnienia o lekach</string>
+    <string name="notification_channel_description">Codzienne przypomnienia o przyjęciu leków</string>
+    <string name="notification_title">Czas na lek</string>
+    <string name="notification_text">Nie zapomnij przyjąć leku %1$s.</string>
+
+    <!-- Errors -->
+    <string name="error_no_internet">Brak połączenia z internetem. Sprawdź sieć i spróbuj ponownie.</string>
+    <string name="error_timeout">Upłynął limit czasu żądania. Spróbuj ponownie.</string>
+    <string name="error_server">Baza leków zwróciła błąd (%1$d). Spróbuj ponownie później.</string>
+    <string name="error_parsing">Otrzymano nieoczekiwaną odpowiedź z bazy leków.</string>
+    <string name="error_query_too_short">Wpisz co najmniej 2 znaki.</string>
+    <string name="error_severity_range">Nasilenie musi mieścić się w zakresie od 1 do 10.</string>
+    <string name="error_notes_too_long">Notatki są zbyt długie.</string>
+    <string name="error_nickname_too_long">Pseudonim jest zbyt długi.</string>
+    <string name="error_dose_too_long">Dawka jest zbyt długa.</string>
+    <string name="error_interval_range">Podaj pełną liczbę godzin od 1 do 168.</string>
+    <string name="error_too_many_reminders">Do jednego leku możesz ustawić do 10 przypomnień.</string>
+    <string name="error_medication_not_found">Tego leku nie ma już w Twoim dzienniku.</string>
+    <string name="error_storage">Brak dostępu do pamięci lokalnej. Spróbuj ponownie.</string>
+    <string name="error_unknown">Coś poszło nie tak. Spróbuj ponownie.</string>
+</resources>

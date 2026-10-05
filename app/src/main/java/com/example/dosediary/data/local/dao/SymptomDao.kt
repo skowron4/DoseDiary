@@ -18,7 +18,8 @@ interface SymptomDao {
                COALESCE(NULLIF(TRIM(m.customUserNickname), ''), m.commercialName) AS medicationName,
                s.severity AS severity,
                s.notes AS notes,
-               s.loggedAtMillis AS loggedAtMillis
+               s.loggedAtMillis AS loggedAtMillis,
+               s.tags AS tags
         FROM symptoms s
         LEFT JOIN medications m ON m.id = s.medicationId
         ORDER BY s.loggedAtMillis DESC
@@ -33,7 +34,8 @@ interface SymptomDao {
                COALESCE(NULLIF(TRIM(m.customUserNickname), ''), m.commercialName) AS medicationName,
                s.severity AS severity,
                s.notes AS notes,
-               s.loggedAtMillis AS loggedAtMillis
+               s.loggedAtMillis AS loggedAtMillis,
+               s.tags AS tags
         FROM symptoms s
         LEFT JOIN medications m ON m.id = s.medicationId
         WHERE s.id = :id

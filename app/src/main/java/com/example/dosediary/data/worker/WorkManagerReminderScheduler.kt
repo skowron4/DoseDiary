@@ -34,6 +34,8 @@ class WorkManagerReminderScheduler(
                     Data.Builder()
                         .putString(MedicationReminderWorker.KEY_MEDICATION_ID, medicationId)
                         .putString(MedicationReminderWorker.KEY_MEDICATION_NAME, medicationName)
+                        .putInt(MedicationReminderWorker.KEY_HOUR, time.hour)
+                        .putInt(MedicationReminderWorker.KEY_MINUTE, time.minute)
                         .build(),
                 )
                 .addTag(TAG)
