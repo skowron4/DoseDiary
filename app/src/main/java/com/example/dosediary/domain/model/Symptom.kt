@@ -7,6 +7,8 @@ package com.example.dosediary.domain.model
  * @property medicationId Optional link to the medication the symptom relates to.
  * @property medicationName Denormalised name of the linked medication, for display.
  * @property severity Subjective severity, [MIN_SEVERITY]..[MAX_SEVERITY].
+ * @property tags Quick-pick symptoms ("Headache", "Nausea", ...) selected for this entry.
+ * @property notes Free-form additional notes.
  * @property loggedAtMillis Epoch milliseconds at which the symptom was logged.
  */
 data class Symptom(
@@ -14,6 +16,7 @@ data class Symptom(
     val medicationId: String? = null,
     val medicationName: String? = null,
     val severity: Int,
+    val tags: Set<SymptomTag> = emptySet(),
     val notes: String = "",
     val loggedAtMillis: Long,
 ) {

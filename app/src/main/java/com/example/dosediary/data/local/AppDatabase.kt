@@ -13,10 +13,14 @@ import com.example.dosediary.data.local.entity.SymptomEntity
 
 @Database(
     entities = [MedicationEntity::class, MedicationReminderEntity::class, SymptomEntity::class],
-    version = 3,
+    version = 4,
     exportSchema = true,
     autoMigrations = [
         AutoMigration(from = 1, to = 2, spec = AppDatabase.Migration1To2::class),
+        // v2 -> v3: new `tags` column on symptoms (defaults to '' for existing rows).
+        AutoMigration(from = 2, to = 3),
+        // v3 -> v4 changes data (existing reminders move to their own table), so it is the manual
+        // MIGRATION_3_4 registered on the database builder (see DatabaseModule).
     ],
 )
 abstract class AppDatabase : RoomDatabase() {
