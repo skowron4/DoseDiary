@@ -1,16 +1,17 @@
 package com.example.dosediary.data.local
 
 import com.example.dosediary.data.local.entity.MedicationEntity
-import com.example.dosediary.data.local.entity.MedicationReminderEntity
-import com.example.dosediary.data.local.entity.MedicationWithReminders
+import com.example.dosediary.data.local.entity.MedicationIntakeEntity
+import com.example.dosediary.data.local.entity.MedicationWithIntakes
 import com.example.dosediary.data.local.entity.SymptomEntity
 import com.example.dosediary.data.local.entity.SymptomWithMedication
+import com.example.dosediary.domain.model.Intake
 import com.example.dosediary.domain.model.Medication
 import com.example.dosediary.domain.model.ReminderTime
 import com.example.dosediary.domain.model.Symptom
 import com.example.dosediary.domain.model.SymptomTag
 
-fun MedicationWithReminders.toDomain(): Medication = Medication(
+fun MedicationWithIntakes.toDomain(): Medication = Medication(
     id = medication.id,
     commercialName = medication.commercialName,
     activeSubstance = medication.activeSubstance,
@@ -18,9 +19,9 @@ fun MedicationWithReminders.toDomain(): Medication = Medication(
     customUserNickname = medication.customUserNickname,
     purpose = medication.purpose,
     route = medication.route,
-    doseAmount = medication.doseAmount,
-    intervalHours = medication.intervalHours,
-    reminderTimes = reminders.map { ReminderTime(it.hour, it.minute) }.sorted(),
+    frequencyDays = medication.frequencyDays,
+    frequencyStartEpochDay = medication.frequencyStartEpochDay,
+    intakes = intakes.map { it.toDomain() }.sortedBy { it.time },
 )
 
 fun Medication.toEntity(savedAtMillis: Long): MedicationEntity = MedicationEntity(
@@ -31,13 +32,28 @@ fun Medication.toEntity(savedAtMillis: Long): MedicationEntity = MedicationEntit
     customUserNickname = customUserNickname,
     purpose = purpose,
     route = route,
-    doseAmount = doseAmount,
-    intervalHours = intervalHours,
+    frequencyDays = frequencyDays,
+    frequencyStartEpochDay = frequencyStartEpochDay,
     savedAtMillis = savedAtMillis,
 )
 
-fun List<ReminderTime>.toReminderEntities(medicationId: String): List<MedicationReminderEntity> =
-    distinct().map { MedicationReminderEntity(medicationId = medicationId, hour = it.hour, minute = it.minute) }
+fun MedicationIntakeEntity.toDomain(): Intake = Intake(
+    time = ReminderTime(hour, minute),
+    doseAmount = doseAmount,
+    notify = notify,
+)
+
+/** One row per distinct time; if a time appears twice the first entry wins. */
+fun List<Intake>.toIntakeEntities(medicationId: String): List<MedicationIntakeEntity> =
+    distinctBy { it.time }.map {
+        MedicationIntakeEntity(
+            medicationId = medicationId,
+            hour = it.time.hour,
+            minute = it.time.minute,
+            doseAmount = it.doseAmount,
+            notify = it.notify,
+        )
+    }
 
 fun SymptomWithMedication.toDomain(): Symptom = Symptom(
     id = id,

@@ -17,14 +17,16 @@ data class MedicationEntity(
     val customUserNickname: String?,
     val purpose: String?,
     val route: String?,
-    val doseAmount: String?,
-    val intervalHours: Int?,
+    /** Days between intake days; 1 means every day. */
+    @ColumnInfo(defaultValue = "1") val frequencyDays: Int,
+    /** Epoch day the interval is counted from; only meaningful when [frequencyDays] > 1. */
+    @ColumnInfo(defaultValue = "0") val frequencyStartEpochDay: Long,
     val savedAtMillis: Long,
 )
 
-/** One daily reminder time of a medication. Removed together with its medication. */
+/** One planned intake (time, dose, notification) of a medication. Removed together with its medication. */
 @Entity(
-    tableName = "medication_reminders",
+    tableName = "medication_intakes",
     foreignKeys = [
         ForeignKey(
             entity = MedicationEntity::class,
@@ -35,18 +37,20 @@ data class MedicationEntity(
     ],
     indices = [Index(value = ["medicationId", "hour", "minute"], unique = true)],
 )
-data class MedicationReminderEntity(
+data class MedicationIntakeEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val medicationId: String,
     val hour: Int,
     val minute: Int,
+    val doseAmount: String?,
+    @ColumnInfo(defaultValue = "1") val notify: Boolean,
 )
 
-/** A medication together with its reminder times. */
-data class MedicationWithReminders(
+/** A medication together with its intakes. */
+data class MedicationWithIntakes(
     @Embedded val medication: MedicationEntity,
     @Relation(parentColumn = "id", entityColumn = "medicationId")
-    val reminders: List<MedicationReminderEntity>,
+    val intakes: List<MedicationIntakeEntity>,
 )
 
 @Entity(

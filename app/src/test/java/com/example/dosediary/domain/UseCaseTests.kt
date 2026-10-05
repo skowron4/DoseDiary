@@ -122,7 +122,7 @@ class ReminderUseCasesTest {
         DeleteMedicationUseCase(repository, scheduler)("m1")
 
         assertNull(repository.getMedication("m1"))
-        assertEquals(listOf("m1"), scheduler.cancelled)
+        assertEquals(listOf(medication), scheduler.cancelled)
     }
 
     @Test(expected = IllegalArgumentException::class)

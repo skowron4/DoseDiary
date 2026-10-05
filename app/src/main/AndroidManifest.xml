@@ -4,7 +4,15 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.USE_BIOMETRIC" />
+    <!-- Requested at runtime only when the user switches a reminder on (Android 13+). -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!--
+      Lets reminders fire exactly on time. Only requested when the user switches a reminder on; without
+      it reminders still work, but the system may delay them. Not auto-granted on Android 13+.
+    -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <!-- Re-creates the reminders after a reboot. -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <application
         android:name=".DoseDiaryApp"
@@ -32,6 +40,23 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- Exact alarm of an intake reminder; only our own PendingIntents target it. -->
+        <receiver
+            android:name=".data.worker.ReminderAlarmReceiver"
+            android:exported="false" />
+
+        <!-- Rebuilds the reminder schedule after reboot, app update, time-zone and exact-alarm changes. -->
+        <receiver
+            android:name=".data.worker.ReminderSystemEventsReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+                <action android:name="android.app.action.SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED" />
+            </intent-filter>
+        </receiver>
 
         <!-- Lets AppCompat remember the chosen app language itself on Android 8-12. -->
         <service

@@ -18,7 +18,9 @@ import com.example.dosediary.presentation.common.severityColor
 @Immutable
 data class SymptomItemUi(
     val id: Long,
+    /** "Related to: Morning pill" when the symptom is linked to a medication, otherwise the "General" label. */
     val title: String,
+    val isLinkedToMedication: Boolean,
     val dateText: String,
     val severityText: String,
     val severityColor: Color,
@@ -36,9 +38,16 @@ data class SymptomItemUi(
         fun from(symptom: Symptom, text: UiTextFormatter): SymptomItemUi {
             val labels = symptom.tags.map { text.string(it.labelRes()) }
             val hidden = labels.size - MAX_VISIBLE_TAGS
+            // The name is the medication's custom name when it has one, otherwise its commercial name.
+            val medicationName = symptom.medicationName?.takeIf { it.isNotBlank() }
             return SymptomItemUi(
                 id = symptom.id,
-                title = symptom.medicationName ?: text.string(R.string.symptom_general),
+                title = if (medicationName != null) {
+                    text.string(R.string.symptom_related_to, medicationName)
+                } else {
+                    text.string(R.string.symptom_general)
+                },
+                isLinkedToMedication = medicationName != null,
                 dateText = text.dateTime(symptom.loggedAtMillis),
                 severityText = symptom.severity.toString(),
                 severityColor = severityColor(symptom.severity),

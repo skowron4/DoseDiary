@@ -29,10 +29,12 @@
     <string name="symptoms_empty">Nie zapisano jeszcze żadnych objawów. Kliknij „Dodaj objaw”, aby dodać pierwszy.</string>
     <string name="action_find_medications">Znajdź leki</string>
     <string name="action_log_symptom">Dodaj objaw</string>
-    <string name="action_set_reminder">Dodaj przypomnienia</string>
+    <string name="action_set_reminder">Ustaw harmonogram</string>
     <string name="symptom_general">Ogólne (bez leku)</string>
-    <string name="reminder_daily_at">Codziennie o %1$s</string>
-    <string name="dosage_every_hours">co %1$d h</string>
+    <string name="symptom_related_to">Dotyczy leku: %1$s</string>
+    <string name="frequency_every_day">Codziennie</string>
+    <string name="frequency_every_n_days">Co %1$d dni</string>
+    <string name="intake_summary">%1$s · %2$s</string>
     
     <string name="medication_removed">Usunięto lek %1$s</string>
     <string name="symptom_removed">Usunięto wpis objawu</string>
@@ -52,17 +54,28 @@
 
     <!-- Edit medication -->
     <string name="edit_medication_title">Edytuj lek</string>
-    <string name="dose_section_title">Dawkowanie</string>
+    <string name="frequency_section_title">Częstotliwość</string>
+    <string name="frequency_option_every_n_days">Co X dni</string>
+    <string name="frequency_days_label">Dni</string>
+    <string name="frequency_start_hint">Liczone od dnia zapisania tej zmiany.</string>
+    <string name="intakes_section_title">Przyjęcia</string>
+    <string name="intakes_empty">Brak przyjęć. Dodaj godzinę, aby ustawić dawkę i przypomnienie.</string>
+    <string name="action_add_intake">Dodaj przyjęcie</string>
+    <string name="action_remove_intake">Usuń przyjęcie o %1$s</string>
+    <string name="action_change_intake_time">Zmień godzinę %1$s</string>
+    <string name="intake_dialog_title">Godzina przyjęcia</string>
     <string name="dose_amount_label">Dawka</string>
     <string name="dose_amount_placeholder">np. 2 tabletki</string>
-    <string name="dose_interval_label">Co ile godzin</string>
-    <string name="dose_interval_suffix">h</string>
-    <string name="reminders_section_title">Codzienne przypomnienia</string>
-    <string name="reminders_empty">Brak przypomnień.</string>
-    <string name="action_add_reminder">Dodaj przypomnienie</string>
-    <string name="action_remove_reminder">Usuń przypomnienie o %1$s</string>
-    <string name="reminder_dialog_title">Godzina przypomnienia</string>
+    <string name="intake_notify_label">Przypominaj</string>
     <string name="action_add">Dodaj</string>
+    <string name="action_ok">OK</string>
+    <string name="permission_not_now">Nie teraz</string>
+    <string name="permission_open_settings">Otwórz ustawienia</string>
+    <string name="notifications_permission_denied">Powiadomienia nie zostały dozwolone, więc to przypomnienie pozostaje wyłączone.</string>
+    <string name="permission_notifications_blocked_title">Powiadomienia są wyłączone</string>
+    <string name="permission_notifications_blocked_text">Aby otrzymywać przypomnienia, zezwól na powiadomienia dla DoseDiary w ustawieniach systemu.</string>
+    <string name="permission_exact_alarms_title">Zezwolić na dokładne przypomnienia?</string>
+    <string name="permission_exact_alarms_text">Bez tego Android może opóźniać przypomnienia o kilka minut. Możesz to zmienić w dowolnym momencie w ustawieniach systemu.</string>
     <string name="medication_updated">Zapisano zmiany</string>
     <string name="reminders_saved_no_permission">Zapisano, ale powiadomienia są wyłączone, więc nie otrzymasz alertu.</string>
     <string name="error_medication_load_failed">Nie znaleziono tego leku.</string>
@@ -112,6 +125,7 @@
     <string name="notification_channel_description">Codzienne przypomnienia o przyjęciu leków</string>
     <string name="notification_title">Czas na lek</string>
     <string name="notification_text">Nie zapomnij przyjąć leku %1$s.</string>
+    <string name="notification_text_dose">Nie zapomnij przyjąć leku %1$s (%2$s).</string>
 
     <!-- Errors -->
     <string name="error_no_internet">Brak połączenia z internetem. Sprawdź sieć i spróbuj ponownie.</string>
@@ -123,8 +137,9 @@
     <string name="error_notes_too_long">Notatki są zbyt długie.</string>
     <string name="error_nickname_too_long">Nazwa własna jest zbyt długa.</string>
     <string name="error_dose_too_long">Dawka jest zbyt długa.</string>
-    <string name="error_interval_range">Podaj pełną liczbę godzin od 1 do 168.</string>
-    <string name="error_too_many_reminders">Do jednego leku możesz ustawić do 10 przypomnień.</string>
+    <string name="error_frequency_range">Podaj pełną liczbę dni od 1 do 90.</string>
+    <string name="error_too_many_intakes">Do jednego leku możesz ustawić do 10 przyjęć.</string>
+    <string name="error_duplicate_intake_time">Masz już przyjęcie o tej godzinie.</string>
     <string name="error_medication_not_found">Tego leku nie ma już w Twoim dzienniku.</string>
     <string name="error_storage">Brak dostępu do pamięci lokalnej. Spróbuj ponownie.</string>
     <string name="error_unknown">Coś poszło nie tak. Spróbuj ponownie.</string>
