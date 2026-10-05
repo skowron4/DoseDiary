@@ -39,6 +39,7 @@ import com.example.dosediary.domain.usecase.UpdateMedicationNicknameUseCase
 import com.example.dosediary.domain.util.Clock
 import com.example.dosediary.presentation.app.AppViewModel
 import com.example.dosediary.presentation.dashboard.DashboardViewModel
+import com.example.dosediary.presentation.medication.MedicationDetailsViewModel
 import com.example.dosediary.presentation.search.SearchViewModel
 import com.example.dosediary.presentation.settings.SettingsViewModel
 import com.example.dosediary.presentation.symptom.AddSymptomViewModel
@@ -95,11 +96,17 @@ val appModule = module {
         DashboardViewModel(
             observeMedications = get(),
             observeSymptoms = get(),
-            deleteMedication = get(),
             deleteSymptom = get(),
+        )
+    }
+    viewModel { params ->
+        MedicationDetailsViewModel(
+            medicationId = params.get<String>(),
+            observeMedications = get(),
             scheduleReminder = get(),
             cancelReminder = get(),
             updateNickname = get(),
+            deleteMedication = get(),
         )
     }
     viewModel {
