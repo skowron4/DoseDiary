@@ -1,3 +1,4 @@
+import java.util.Properties
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -8,13 +9,29 @@ plugins {
     alias(libs.plugins.google.ksp)
 }
 
+// Release signing credentials live in the (git-ignored) root local.properties:
+//   signing.storeFile=C:/path/to/key.jks
+//   signing.storePassword=...
+//   signing.keyAlias=...
+//   signing.keyPassword=...
+// If they are missing, the release build type is simply left unsigned.
+val signingProps = Properties().apply {
+    val f = rootProject.file("local.properties")
+    if (f.exists()) f.inputStream().use { load(it) }
+}
+val hasReleaseSigning = listOf("signing.storeFile", "signing.storePassword", "signing.keyAlias", "signing.keyPassword")
+    .all { !signingProps.getProperty(it).isNullOrBlank() } &&
+    file(signingProps.getProperty("signing.storeFile", "")).exists()
+
 android {
     signingConfigs {
-        create("release") {
-            storeFile = file("C:\\Users\\Public\\Documents\\key1.jks")
-            keyAlias = "key1"
-            storePassword = "mojKlucz"
-            keyPassword = "mojKlucz"
+        if (hasReleaseSigning) {
+            create("release") {
+                storeFile = file(signingProps.getProperty("signing.storeFile"))
+                storePassword = signingProps.getProperty("signing.storePassword")
+                keyAlias = signingProps.getProperty("signing.keyAlias")
+                keyPassword = signingProps.getProperty("signing.keyPassword")
+            }
         }
     }
     namespace = "com.example.dosediary"
@@ -41,7 +58,9 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            signingConfig = signingConfigs.getByName("release")
+            if (hasReleaseSigning) {
+                signingConfig = signingConfigs.getByName("release")
+            }
         }
     }
     compileOptions {
