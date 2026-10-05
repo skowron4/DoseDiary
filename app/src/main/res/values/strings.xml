@@ -132,4 +132,19 @@
     <string name="error_medication_not_found">That medication is no longer in your diary.</string>
     <string name="error_storage">Could not access local storage. Please try again.</string>
     <string name="error_unknown">Something went wrong. Please try again.</string>
+
+    <!-- Drug interactions -->
+    <string name="interaction_title">Possible interactions</string>
+    <string name="interaction_item_title">%1$s – %2$s</string>
+    <string name="interaction_severity_high">high concern</string>
+    <string name="interaction_severity_moderate">moderate concern</string>
+    <string name="interaction_severity_info">mentioned</string>
+    <string name="interaction_disclaimer">Estimated from the wording of this drug\'s label, not a medical assessment. Ask your pharmacist or doctor before combining medications.</string>
+    <string name="interaction_checking">Checking for interactions…</string>
+    <string name="interaction_nothing_found">This drug\'s label does not mention your other medications. That is not a guarantee that they are safe together.</string>
+    <string name="interaction_unavailable">Could not check for interactions right now. Everything else keeps working; try again later.</string>
+    <string name="interaction_no_data">This drug\'s label has no interaction information to check.</string>
+    <string name="interaction_dialog_title">Possible interactions found</string>
+    <string name="action_save_anyway">Save anyway</string>
+    <string name="medication_saved_unchecked">%1$s saved to your diary. Interactions could not be checked.</string>
 </resources>

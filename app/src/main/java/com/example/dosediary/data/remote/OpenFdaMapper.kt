@@ -42,3 +42,15 @@ private fun String.toSummary(): String {
         .trim()
     return if (cleaned.length <= MAX_SUMMARY_LENGTH) cleaned else cleaned.take(MAX_SUMMARY_LENGTH).trimEnd() + "…"
 }
+
+/**
+ * The label's interaction section as one whitespace-normalised string without its "7 DRUG
+ * INTERACTIONS" heading, or `null` when the label has none.
+ */
+fun DrugLabelDto.interactionText(): String? =
+    drugInteractions.orEmpty()
+        .joinToString(" ")
+        .replace(Regex("\\s+"), " ")
+        .replace(Regex("^\\s*(\\d+(\\.\\d+)*\\s*)?drug interactions:?\\s*", RegexOption.IGNORE_CASE), "")
+        .trim()
+        .takeIf { it.isNotEmpty() }

@@ -3,6 +3,8 @@ package com.example.dosediary.presentation.medication
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.dosediary.R
+import com.example.dosediary.domain.interaction.CheckMedicationInteractionsUseCase
+import com.example.dosediary.domain.interaction.InteractionCheckResult
 import com.example.dosediary.domain.model.AppResult
 import com.example.dosediary.domain.model.DomainError
 import com.example.dosediary.domain.model.Medication
@@ -13,6 +15,9 @@ import com.example.dosediary.domain.usecase.UpdateMedicationDetailsUseCase
 import com.example.dosediary.presentation.common.UiMessage
 import com.example.dosediary.presentation.common.runCatchingCancellable
 import com.example.dosediary.presentation.common.toUiMessage
+import com.example.dosediary.presentation.interaction.InteractionUiState
+import com.example.dosediary.presentation.interaction.toUiState
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -34,6 +39,8 @@ data class EditMedicationUiState(
     val reminderTimes: List<ReminderTime> = emptyList(),
     val isSaving: Boolean = false,
     val errorMessage: UiMessage? = null,
+    /** Possible interactions with the user's other saved medications (fail-open, never blocks editing). */
+    val interactions: InteractionUiState = InteractionUiState.Idle,
 )
 
 /** Edits the nickname, dosage and daily reminder times of one saved medication. */
@@ -41,6 +48,7 @@ class EditMedicationViewModel(
     private val medicationId: String,
     private val getMedication: GetMedicationUseCase,
     private val updateDetails: UpdateMedicationDetailsUseCase,
+    private val checkInteractions: CheckMedicationInteractionsUseCase,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(EditMedicationUiState())
@@ -68,7 +76,27 @@ class EditMedicationViewModel(
                         reminderTimes = medication.reminderTimes,
                     )
                 }
+                loadedMedication = medication
+                runInteractionCheck(medication)
             }
+        }
+    }
+
+    private var loadedMedication: Medication? = null
+    private var interactionJob: Job? = null
+
+    /** Re-runs the interaction check, e.g. after the device came back online. */
+    fun retryInteractionCheck() {
+        loadedMedication?.let(::runInteractionCheck)
+    }
+
+    private fun runInteractionCheck(medication: Medication) {
+        interactionJob?.cancel()
+        _uiState.update { it.copy(interactions = InteractionUiState.Checking) }
+        interactionJob = viewModelScope.launch {
+            val result = runCatchingCancellable { checkInteractions(medication) }
+                .getOrElse { InteractionCheckResult.Unknown(DomainError.Unknown) }
+            _uiState.update { it.copy(interactions = result.toUiState()) }
         }
     }
 
