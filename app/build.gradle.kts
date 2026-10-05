@@ -125,3 +125,9 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 }
+
+composeCompiler {
+    // Treat our immutable domain models (and the read-only List/Set they hold) as stable, so list items skip
+    // recomposition when their data is unchanged. See compose_stability.conf.
+    stabilityConfigurationFile = layout.projectDirectory.file("compose_stability.conf")
+}

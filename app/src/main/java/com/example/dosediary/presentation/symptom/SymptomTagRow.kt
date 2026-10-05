@@ -2,14 +2,15 @@ package com.example.dosediary.presentation.symptom
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.FlowRowOverflow
+import androidx.compose.foundation.layout.ContextualFlowRow
+import androidx.compose.foundation.layout.ContextualFlowRowOverflow
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -24,6 +25,11 @@ import com.example.dosediary.ui.theme.DoseDiaryTheme
  *
  * Tags that do not fit are not wrapped onto more lines; they are replaced by a "+N" chip, where N is
  * the number of hidden tags. The indicator reserves its own space, so it is always visible.
+ *
+ * This uses [ContextualFlowRow] rather than `FlowRow`: the "+N" chip needs the number of shown items,
+ * and `FlowRow` only allows reading it in the draw phase (reading it while composing throws
+ * `IllegalStateException: Accessing noOfItemsShown before it is set`). `ContextualFlowRow` provides it
+ * during composition.
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -32,19 +38,20 @@ fun SymptomTagRow(
     modifier: Modifier = Modifier,
 ) {
     if (tags.isEmpty()) return
+    val ordered = remember(tags) { tags.toList() }
 
-    FlowRow(
+    ContextualFlowRow(
+        itemCount = ordered.size,
         modifier = modifier,
         horizontalArrangement = Arrangement.spacedBy(6.dp),
         maxLines = 1,
-        overflow = FlowRowOverflow.expandIndicator {
+        overflow = ContextualFlowRowOverflow.expandIndicator {
             TagChip(text = stringResource(R.string.symptom_tags_more, totalItemCount - shownItemCount))
         },
-    ) {
-        tags.forEach { tag -> TagChip(text = stringResource(tag.labelRes())) }
+    ) { index ->
+        TagChip(text = stringResource(ordered[index].labelRes()))
     }
 }
-
 @Composable
 private fun TagChip(text: String) {
     Surface(

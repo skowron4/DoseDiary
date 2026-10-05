@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
@@ -32,6 +33,8 @@ class SymptomDiaryViewModel(
 ) : ViewModel() {
 
     val uiState: StateFlow<SymptomDiaryUiState> = observeSymptoms()
+        // Room re-queries on any write to the table; skip emissions that did not change the list.
+        .distinctUntilChanged()
         .map<List<Symptom>, SymptomDiaryUiState> { SymptomDiaryUiState.Success(it) }
         .catch { emit(SymptomDiaryUiState.Error(DomainError.Storage)) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SymptomDiaryUiState.Loading)
