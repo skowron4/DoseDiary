@@ -302,7 +302,7 @@ private fun LazyListScope.browseSections(
                     )
                 }
             } else {
-                items(state.symptoms, key = { "symptom-${it.id}" }) { symptom ->
+                items(state.symptoms, key = { "symptom-${it.id}" }, contentType = { "symptom" }) { symptom ->
                     SymptomCard(
                         symptom = symptom,
                         onClick = { onEditSymptom(symptom) },
@@ -315,7 +315,7 @@ private fun LazyListScope.browseSections(
 }
 
 private fun LazyListScope.medicationItems(medications: List<Medication>, actions: MedicationActions) {
-    items(medications, key = { "med-${it.id}" }) { medication ->
+    items(medications, key = { "med-${it.id}" }, contentType = { "medication" }) { medication ->
         MedicationCard(
             medication = medication,
             onLogSymptom = { actions.onLogSymptom(medication) },

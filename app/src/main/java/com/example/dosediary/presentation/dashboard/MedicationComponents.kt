@@ -2,6 +2,8 @@ package com.example.dosediary.presentation.dashboard
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -29,6 +31,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.dosediary.R
@@ -40,9 +43,11 @@ import com.example.dosediary.ui.theme.DoseDiaryTheme
 /**
  * A saved medication.
  *
- * Primary text is the user's nickname when set, otherwise the commercial name
- * ([Medication.displayName]); the active substance is shown as secondary text.
+ * Text hierarchy: the full commercial name is the primary text, the user's nickname (when set)
+ * sits directly below it, and the active substance is shown as a compact info line.
+ * The reminder chip and the "log symptom" action share one row to keep the card short.
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun MedicationCard(
     medication: Medication,
@@ -54,15 +59,38 @@ fun MedicationCard(
     modifier: Modifier = Modifier,
 ) {
     Card(modifier = modifier.fillMaxWidth()) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Column(
+            modifier = Modifier.padding(start = 16.dp, top = 8.dp, end = 4.dp, bottom = 4.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
             Row(verticalAlignment = Alignment.Top) {
-                Column(Modifier.weight(1f)) {
-                    Text(medication.displayName, style = MaterialTheme.typography.titleMedium)
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(top = 8.dp),
+                ) {
+                    Text(
+                        text = medication.commercialName,
+                        style = MaterialTheme.typography.titleMedium,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    medication.nicknameOrNull?.let {
+                        Text(
+                            text = it,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.primary,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
                     medication.displaySubtitle?.let {
                         Text(
-                            it,
-                            style = MaterialTheme.typography.bodyMedium,
+                            text = it,
+                            style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
                         )
                     }
                 }
@@ -74,9 +102,10 @@ fun MedicationCard(
                 }
             }
 
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            FlowRow(
+                modifier = Modifier.fillMaxWidth().padding(end = 12.dp),
+                verticalArrangement = Arrangement.Center,
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 val reminder = medication.reminderTime
                 AssistChip(
@@ -95,18 +124,20 @@ fun MedicationCard(
                 if (reminder != null) {
                     TextButton(onClick = onClearReminder) { Text(stringResource(R.string.action_clear)) }
                 }
-            }
-
-            TextButton(onClick = onLogSymptom) {
-                Icon(Icons.Default.Add, contentDescription = null, Modifier.size(18.dp))
-                Text(
-                    stringResource(R.string.action_log_symptom),
-                    modifier = Modifier.padding(start = 8.dp),
-                )
+                TextButton(onClick = onLogSymptom) {
+                    Icon(Icons.Default.Add, contentDescription = null, Modifier.size(18.dp))
+                    Text(
+                        stringResource(R.string.action_log_symptom),
+                        modifier = Modifier.padding(start = 8.dp),
+                    )
+                }
             }
         }
     }
 }
+
+private val Medication.nicknameOrNull: String?
+    get() = customUserNickname?.takeIf { it.isNotBlank() }
 
 /** Lets the user set or clear a nickname. Saving an empty field removes it. */
 @Composable
