@@ -2,7 +2,8 @@
     <string name="app_name">DoseDiary</string>
 
     <!-- Navigation -->
-    <string name="nav_dashboard">Home</string>
+    <string name="nav_dashboard">Medications</string>
+    <string name="nav_symptoms">Symptoms</string>
     <string name="nav_settings">Settings</string>
 
     <!-- Common actions -->
@@ -22,10 +23,9 @@
     <string name="biometric_subtitle">Use your fingerprint, face, or screen lock</string>
     <string name="biometric_unavailable">Authentication is temporarily unavailable. Please try again.</string>
 
-    <!-- Dashboard -->
-    <string name="dashboard_title">My diary</string>
-    <string name="section_medications">My medications</string>
-    <string name="section_symptoms">Symptom log</string>
+    <!-- Medications tab -->
+    <string name="dashboard_title">My medications</string>
+    <string name="symptoms_title">Symptom diary</string>
     <string name="medications_empty">You have not saved any medications yet.</string>
     <string name="symptoms_empty">No symptoms logged yet. Tap “Log symptom” to add one.</string>
     <string name="action_find_medications">Find medications</string>

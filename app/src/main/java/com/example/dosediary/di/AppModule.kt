@@ -42,6 +42,7 @@ import com.example.dosediary.presentation.medication.EditMedicationViewModel
 import com.example.dosediary.presentation.search.SearchViewModel
 import com.example.dosediary.presentation.settings.SettingsViewModel
 import com.example.dosediary.presentation.symptom.AddSymptomViewModel
+import com.example.dosediary.presentation.symptom.SymptomDiaryViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -93,11 +94,10 @@ val appModule = module {
     viewModel {
         DashboardViewModel(
             observeMedications = get(),
-            observeSymptoms = get(),
             deleteMedication = get(),
-            deleteSymptom = get(),
         )
     }
+    viewModel { SymptomDiaryViewModel(observeSymptoms = get(), deleteSymptom = get()) }
     viewModel { params ->
         EditMedicationViewModel(
             medicationId = params.get<String>(),
