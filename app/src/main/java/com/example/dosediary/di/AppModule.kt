@@ -42,6 +42,8 @@ import com.example.dosediary.domain.usecase.SetScreenProtectionEnabledUseCase
 import com.example.dosediary.domain.usecase.UpdateMedicationDetailsUseCase
 import com.example.dosediary.domain.util.Clock
 import com.example.dosediary.presentation.app.AppViewModel
+import com.example.dosediary.presentation.common.AndroidUiTextFormatter
+import com.example.dosediary.presentation.common.UiTextFormatter
 import com.example.dosediary.presentation.dashboard.DashboardViewModel
 import com.example.dosediary.presentation.medication.EditMedicationViewModel
 import com.example.dosediary.presentation.search.SearchViewModel
@@ -74,6 +76,7 @@ val appModule = module {
     single<SettingsRepository> { DataStoreSettingsRepository(dataStore = get()) }
     single<LanguageManager> { AppCompatLanguageManager() }
     single<SearchHistoryRepository> { DataStoreSearchHistoryRepository(dataStore = get()) }
+    single<UiTextFormatter> { AndroidUiTextFormatter(androidContext()) }
     single<ReminderScheduler> { WorkManagerReminderScheduler(workManager = get()) }
 
     // --- Use cases ---------------------------------------------------------------------------
@@ -103,9 +106,10 @@ val appModule = module {
         DashboardViewModel(
             observeMedications = get(),
             deleteMedication = get(),
+            text = get(),
         )
     }
-    viewModel { SymptomDiaryViewModel(observeSymptoms = get(), deleteSymptom = get()) }
+    viewModel { SymptomDiaryViewModel(observeSymptoms = get(), deleteSymptom = get(), text = get()) }
     viewModel { params ->
         EditMedicationViewModel(
             medicationId = params.get<String>(),

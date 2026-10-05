@@ -31,12 +31,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.dosediary.R
-import com.example.dosediary.domain.model.Medication
 import com.example.dosediary.presentation.common.EmptyState
 import com.example.dosediary.presentation.common.TopLevelContentInsets
 import com.example.dosediary.presentation.search.SearchEntryBar
@@ -59,11 +59,14 @@ fun DashboardScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
 
-    var pendingDelete by remember { mutableStateOf<Medication?>(null) }
+    var pendingDelete by remember { mutableStateOf<MedicationItemUi?>(null) }
 
     LaunchedEffect(viewModel) {
         viewModel.messages.collect { snackbarHostState.showSnackbar(it.resolve(context)) }
     }
+    // Item texts are formatted in the ViewModel; tell it when the language may have changed.
+    val locales = LocalConfiguration.current.locales.toLanguageTags()
+    LaunchedEffect(locales) { viewModel.onLocaleMaybeChanged() }
 
     Scaffold(
         contentWindowInsets = TopLevelContentInsets,
@@ -75,8 +78,8 @@ fun DashboardScreen(
                 .padding(padding),
             state = uiState,
             onOpenSearch = onOpenSearch,
-            onLogSymptomFor = { onLogSymptom(it.id) },
-            onEditMedication = { onEditMedication(it.id) },
+            onLogSymptom = onLogSymptom,
+            onEditMedication = onEditMedication,
             onDeleteMedication = { pendingDelete = it },
         )
     }
@@ -89,7 +92,7 @@ fun DashboardScreen(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        viewModel.removeMedication(medication)
+                        viewModel.removeMedication(medication.id, medication.displayName)
                         pendingDelete = null
                     },
                 ) { Text(stringResource(R.string.action_delete)) }
@@ -106,11 +109,18 @@ fun DashboardScreen(
 private fun HomeContent(
     state: DashboardUiState,
     onOpenSearch: () -> Unit,
-    onLogSymptomFor: (Medication) -> Unit,
-    onEditMedication: (Medication) -> Unit,
-    onDeleteMedication: (Medication) -> Unit,
+    onLogSymptom: (medicationId: String) -> Unit,
+    onEditMedication: (medicationId: String) -> Unit,
+    onDeleteMedication: (MedicationItemUi) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    // Resolved once for the whole list, not once per card.
+    val labels = MedicationCardLabels(
+        edit = stringResource(R.string.action_edit_medication),
+        delete = stringResource(R.string.action_delete),
+        logSymptom = stringResource(R.string.action_log_symptom),
+    )
+
     LazyColumn(
         modifier = modifier,
         // No top padding: a sticky header would pin *below* it and leave a gap that items scroll through.
@@ -137,7 +147,8 @@ private fun HomeContent(
 
         browseSections(
             state = state,
-            onLogSymptom = onLogSymptomFor,
+            labels = labels,
+            onLogSymptom = onLogSymptom,
             onEdit = onEditMedication,
             onDelete = onDeleteMedication,
             onOpenSearch = onOpenSearch,
@@ -148,9 +159,10 @@ private fun HomeContent(
 /** Default content: the saved medications. */
 private fun LazyListScope.browseSections(
     state: DashboardUiState,
-    onLogSymptom: (Medication) -> Unit,
-    onEdit: (Medication) -> Unit,
-    onDelete: (Medication) -> Unit,
+    labels: MedicationCardLabels,
+    onLogSymptom: (String) -> Unit,
+    onEdit: (String) -> Unit,
+    onDelete: (MedicationItemUi) -> Unit,
     onOpenSearch: () -> Unit,
 ) {
     when (state) {
@@ -177,28 +189,29 @@ private fun LazyListScope.browseSections(
                     }
                 }
             } else {
-                medicationItems(state.medications, onLogSymptom, onEdit, onDelete)
+                medicationItems(state.medications, labels, onLogSymptom, onEdit, onDelete)
             }
         }
     }
 }
 
 private fun LazyListScope.medicationItems(
-    medications: List<Medication>,
-    onLogSymptom: (Medication) -> Unit,
-    onEdit: (Medication) -> Unit,
-    onDelete: (Medication) -> Unit,
+    medications: List<MedicationItemUi>,
+    labels: MedicationCardLabels,
+    onLogSymptom: (String) -> Unit,
+    onEdit: (String) -> Unit,
+    onDelete: (MedicationItemUi) -> Unit,
 ) {
     items(medications, key = { "med-${it.id}" }, contentType = { "medication" }) { medication ->
         MedicationCard(
-            medication = medication,
-            onLogSymptom = { onLogSymptom(medication) },
-            onEdit = { onEdit(medication) },
-            onDelete = { onDelete(medication) },
+            item = medication,
+            labels = labels,
+            onLogSymptom = onLogSymptom,
+            onEdit = onEdit,
+            onDelete = onDelete,
         )
     }
 }
-
 @Composable
 private fun LoadingRow() {
     Box(Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {

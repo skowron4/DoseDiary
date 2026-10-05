@@ -7,9 +7,7 @@ import com.example.dosediary.domain.model.DomainError
 import com.example.dosediary.domain.model.ReminderTime
 import com.example.dosediary.domain.model.ValidationReason
 import kotlinx.coroutines.CancellationException
-import java.time.Instant
 import java.time.LocalTime
-import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 
@@ -52,11 +50,6 @@ inline fun <T> runCatchingCancellable(block: () -> T): Result<T> = try {
     Result.failure(e)
 }
 
-private val dateTimeFormatter: DateTimeFormatter =
-    DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM, FormatStyle.SHORT)
 private val timeFormatter: DateTimeFormatter = DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT)
-
-fun formatDateTime(epochMillis: Long): String =
-    Instant.ofEpochMilli(epochMillis).atZone(ZoneId.systemDefault()).format(dateTimeFormatter)
 
 fun ReminderTime.format(): String = LocalTime.of(hour, minute).format(timeFormatter)

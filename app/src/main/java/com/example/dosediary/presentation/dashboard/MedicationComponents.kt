@@ -1,166 +1,204 @@
 package com.example.dosediary.presentation.dashboard
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material3.AssistChip
-import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.dosediary.R
-import com.example.dosediary.domain.model.Medication
-import com.example.dosediary.domain.model.ReminderTime
-import com.example.dosediary.presentation.common.format
+import com.example.dosediary.presentation.common.ListItemIconAction
 import com.example.dosediary.ui.theme.DoseDiaryTheme
 
+/** Accessibility/action texts shared by every card; resolved once per list instead of once per card. */
+@Immutable
+data class MedicationCardLabels(
+    val edit: String,
+    val delete: String,
+    val logSymptom: String,
+)
+
+private val CardShape = RoundedCornerShape(12.dp)
+private val PillShape = RoundedCornerShape(8.dp)
+
 /**
- * A saved medication.
+ * A saved medication, built only from plain boxes, rows and text so it is cheap to compose and measure
+ * while scrolling:
+ *  - no Material `Card`, `AssistChip`, `TextButton` or `IconButton`, and no `FlowRow`;
+ *  - every row has a fixed shape: the long reminder text is the only flexible child (`weight` +
+ *    one-line ellipsis), everything else keeps its natural size, so no wrapping is ever computed;
+ *  - it receives final strings ([MedicationItemUi]); nothing is formatted or looked up here.
  *
- * Text hierarchy: the full commercial name is the primary text, the user's nickname (when set)
- * sits directly below it, then the quick dosage line ("2 pills, every 8h") and the active substance.
- * The reminder chip and the "log symptom" action share one row to keep the card short.
+ * Text hierarchy: commercial name, then the nickname, then the dosage line, then the active substance.
+ * The reminder pill and the "log symptom" action share one row to keep the card short.
  */
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun MedicationCard(
-    medication: Medication,
-    onLogSymptom: () -> Unit,
-    onEdit: () -> Unit,
-    onDelete: () -> Unit,
+    item: MedicationItemUi,
+    labels: MedicationCardLabels,
+    onLogSymptom: (medicationId: String) -> Unit,
+    onEdit: (medicationId: String) -> Unit,
+    onDelete: (MedicationItemUi) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    // Formatting times and building the dosage line is not free; redo it only when the data changes.
-    val reminderSummary = remember(medication.reminderTimes) {
-        medication.reminderTimes.takeIf { it.isNotEmpty() }?.joinToString(", ") { it.format() }
-    }
-    val dose = medication.doseAmount?.takeIf { it.isNotBlank() }
-    val interval = medication.intervalHours?.let { stringResource(R.string.dosage_every_hours, it) }
-    val dosage = remember(dose, interval) {
-        listOfNotNull(dose, interval).takeIf { it.isNotEmpty() }?.joinToString(", ")
-    }
+    val colors = MaterialTheme.colorScheme
+    val typography = MaterialTheme.typography
 
-    Card(modifier = modifier.fillMaxWidth()) {
-        Column(
-            modifier = Modifier.padding(start = 16.dp, top = 8.dp, end = 4.dp, bottom = 4.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
-        ) {
-            Row(verticalAlignment = Alignment.Top) {
-                Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(top = 8.dp),
-                ) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(CardShape)
+            .background(colors.surfaceContainerHighest)
+            .padding(start = 16.dp, top = 8.dp, end = 4.dp, bottom = 4.dp),
+    ) {
+        Row(verticalAlignment = Alignment.Top) {
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(top = 8.dp),
+            ) {
+                Text(
+                    text = item.title,
+                    style = typography.titleMedium,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                item.nickname?.let {
                     Text(
-                        text = medication.commercialName,
-                        style = MaterialTheme.typography.titleMedium,
-                        maxLines = 2,
+                        text = it,
+                        style = typography.bodyMedium,
+                        color = colors.primary,
+                        maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
-                    medication.nicknameOrNull?.let {
-                        Text(
-                            text = it,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.primary,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                    }
-                    dosage?.let {
-                        Text(
-                            text = it,
-                            style = MaterialTheme.typography.bodyMedium,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                    }
-                    medication.displaySubtitle?.let {
-                        Text(
-                            text = it,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                    }
                 }
-                IconButton(onClick = onEdit) {
-                    Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.action_edit_medication))
+                item.dosage?.let {
+                    Text(text = it, style = typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
-                IconButton(onClick = onDelete) {
-                    Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.action_delete))
-                }
-            }
-
-            FlowRow(
-                modifier = Modifier.fillMaxWidth().padding(end = 12.dp),
-                verticalArrangement = Arrangement.Center,
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
-            ) {
-                AssistChip(
-                    onClick = onEdit,
-                    leadingIcon = { Icon(Icons.Default.Notifications, contentDescription = null, Modifier.size(18.dp)) },
-                    label = {
-                        Text(
-                            text = if (reminderSummary != null) {
-                                stringResource(R.string.reminder_daily_at, reminderSummary)
-                            } else {
-                                stringResource(R.string.action_set_reminder)
-                            },
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                    },
-                )
-                TextButton(onClick = onLogSymptom) {
-                    Icon(Icons.Default.Add, contentDescription = null, Modifier.size(18.dp))
+                item.substance?.let {
                     Text(
-                        stringResource(R.string.action_log_symptom),
-                        modifier = Modifier.padding(start = 8.dp),
+                        text = it,
+                        style = typography.bodySmall,
+                        color = colors.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                     )
                 }
             }
+            ListItemIconAction(Icons.Default.Edit, labels.edit, onClick = { onEdit(item.id) })
+            ListItemIconAction(Icons.Default.Delete, labels.delete, onClick = { onDelete(item) })
+        }
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(end = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            // The only flexible child: takes whatever width the action leaves and truncates to one line.
+            ReminderPill(
+                text = item.reminderText,
+                onClick = { onEdit(item.id) },
+                modifier = Modifier.weight(1f, fill = false),
+            )
+            LogSymptomAction(text = labels.logSymptom, onClick = { onLogSymptom(item.id) })
         }
     }
 }
 
-private val Medication.nicknameOrNull: String?
-    get() = customUserNickname?.takeIf { it.isNotBlank() }
+/** Replaces `AssistChip`: a rounded tinted row with a bell and one line of text. */
+@Composable
+private fun ReminderPill(text: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val colors = MaterialTheme.colorScheme
+    Row(
+        modifier = modifier
+            .heightIn(min = 36.dp)
+            .clip(PillShape)
+            .background(colors.secondaryContainer)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        Icon(
+            Icons.Default.Notifications,
+            contentDescription = null,
+            tint = colors.onSecondaryContainer,
+            modifier = Modifier.size(18.dp),
+        )
+        Text(
+            text = text,
+            style = MaterialTheme.typography.labelLarge,
+            color = colors.onSecondaryContainer,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f, fill = false),
+        )
+    }
+}
+
+/** Replaces `TextButton`: an icon and a label that keep their natural size. */
+@Composable
+private fun LogSymptomAction(text: String, onClick: () -> Unit) {
+    val primary = MaterialTheme.colorScheme.primary
+    Row(
+        modifier = Modifier
+            .heightIn(min = 48.dp)
+            .clip(PillShape)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Icon(Icons.Default.Add, contentDescription = null, tint = primary, modifier = Modifier.size(18.dp))
+        Text(text = text, style = MaterialTheme.typography.labelLarge, color = primary, maxLines = 1)
+    }
+}
 
 // --- Previews: open this file in Android Studio's Split/Design view to check the card variants. ---
 
-private val previewMedication = Medication(
-    id = "preview",
-    commercialName = "Advil",
-    activeSubstance = "Ibuprofen",
-    manufacturer = "Haleon",
-)
+private val previewLabels = MedicationCardLabels(edit = "Edit", delete = "Delete", logSymptom = "Log symptom")
 
 @Preview(name = "Commercial name only", showBackground = true)
 @Composable
 private fun MedicationCardPreview() {
     DoseDiaryTheme(dynamicColor = false) {
-        MedicationCard(previewMedication, {}, {}, {}, Modifier.padding(16.dp))
+        MedicationCard(
+            item = MedicationItemUi(
+                id = "preview",
+                title = "Advil",
+                displayName = "Advil",
+                nickname = null,
+                dosage = null,
+                substance = "Ibuprofen",
+                reminderText = "Set a reminder",
+            ),
+            labels = previewLabels,
+            onLogSymptom = {},
+            onEdit = {},
+            onDelete = {},
+            modifier = Modifier.padding(16.dp),
+        )
     }
 }
 
@@ -169,14 +207,20 @@ private fun MedicationCardPreview() {
 private fun MedicationCardFullPreview() {
     DoseDiaryTheme(dynamicColor = false) {
         MedicationCard(
-            previewMedication.copy(
-                customUserNickname = "Morning headache pill",
-                doseAmount = "2 pills",
-                intervalHours = 8,
-                reminderTimes = listOf(ReminderTime(8, 0), ReminderTime(16, 0), ReminderTime(23, 59)),
+            item = MedicationItemUi(
+                id = "preview",
+                title = "Advil",
+                displayName = "Morning headache pill",
+                nickname = "Morning headache pill",
+                dosage = "2 pills, every 8h",
+                substance = "Ibuprofen",
+                reminderText = "Daily at 8:00 AM, 4:00 PM, 11:59 PM, 12:30 AM, 1:00 AM",
             ),
-            {}, {}, {},
-            Modifier.padding(16.dp),
+            labels = previewLabels,
+            onLogSymptom = {},
+            onEdit = {},
+            onDelete = {},
+            modifier = Modifier.padding(16.dp),
         )
     }
 }
