@@ -12,12 +12,16 @@ import com.example.dosediary.data.repository.DrugInteractionRepositoryImpl
 import com.example.dosediary.data.repository.DrugSearchRepositoryImpl
 import com.example.dosediary.data.repository.MedicationRepositoryImpl
 import com.example.dosediary.data.repository.SymptomRepositoryImpl
-import com.example.dosediary.data.worker.WorkManagerReminderScheduler
+import com.example.dosediary.data.worker.AndroidReminderNotifier
+import com.example.dosediary.data.worker.AndroidReminderPermissions
+import com.example.dosediary.data.worker.HybridReminderScheduler
 import com.example.dosediary.domain.interaction.CheckMedicationInteractionsUseCase
 import com.example.dosediary.domain.interaction.DrugInteractionRepository
 import com.example.dosediary.domain.repository.DrugSearchRepository
 import com.example.dosediary.domain.repository.LanguageManager
 import com.example.dosediary.domain.repository.MedicationRepository
+import com.example.dosediary.domain.repository.ReminderNotifier
+import com.example.dosediary.domain.repository.ReminderPermissions
 import com.example.dosediary.domain.repository.ReminderScheduler
 import com.example.dosediary.domain.repository.SearchHistoryRepository
 import com.example.dosediary.domain.repository.SettingsRepository
@@ -28,6 +32,7 @@ import com.example.dosediary.domain.usecase.DeleteMedicationUseCase
 import com.example.dosediary.domain.usecase.DeleteSymptomUseCase
 import com.example.dosediary.domain.usecase.GetMedicationUseCase
 import com.example.dosediary.domain.usecase.GetSymptomUseCase
+import com.example.dosediary.domain.usecase.HandleIntakeDueUseCase
 import com.example.dosediary.domain.usecase.LogSymptomUseCase
 import com.example.dosediary.domain.usecase.ObserveSavedMedicationsUseCase
 import com.example.dosediary.domain.usecase.ObserveSearchHistoryUseCase
@@ -39,6 +44,7 @@ import com.example.dosediary.domain.usecase.SearchMedicationUseCase
 import com.example.dosediary.domain.usecase.SetBiometricsEnabledUseCase
 import com.example.dosediary.domain.usecase.SetDarkModeUseCase
 import com.example.dosediary.domain.usecase.SetScreenProtectionEnabledUseCase
+import com.example.dosediary.domain.usecase.SyncRemindersUseCase
 import com.example.dosediary.domain.usecase.UpdateMedicationDetailsUseCase
 import com.example.dosediary.domain.util.Clock
 import com.example.dosediary.presentation.app.AppViewModel
@@ -77,7 +83,16 @@ val appModule = module {
     single<LanguageManager> { AppCompatLanguageManager() }
     single<SearchHistoryRepository> { DataStoreSearchHistoryRepository(dataStore = get()) }
     single<UiTextFormatter> { AndroidUiTextFormatter(androidContext()) }
-    single<ReminderScheduler> { WorkManagerReminderScheduler(workManager = get()) }
+    single<ReminderPermissions> { AndroidReminderPermissions(androidContext()) }
+    single<ReminderNotifier> { AndroidReminderNotifier(androidContext()) }
+    single<ReminderScheduler> {
+        HybridReminderScheduler(
+            context = androidContext(),
+            workManager = get(),
+            permissions = get(),
+            clock = get(),
+        )
+    }
 
     // --- Use cases ---------------------------------------------------------------------------
     factory { SearchMedicationUseCase(get()) }
@@ -86,7 +101,9 @@ val appModule = module {
     factory { DeleteMedicationUseCase(get(), get()) }
     factory { GetMedicationUseCase(get()) }
     factory { CheckMedicationInteractionsUseCase(interactions = get(), medications = get()) }
-    factory { UpdateMedicationDetailsUseCase(get(), get()) }
+    factory { UpdateMedicationDetailsUseCase(get(), get(), get()) }
+    factory { SyncRemindersUseCase(get(), get()) }
+    factory { HandleIntakeDueUseCase(repository = get(), scheduler = get(), notifier = get(), clock = get()) }
     factory { ObserveSymptomsUseCase(get()) }
     factory { GetSymptomUseCase(get()) }
     factory { LogSymptomUseCase(get(), get()) }
@@ -116,6 +133,7 @@ val appModule = module {
             getMedication = get(),
             updateDetails = get(),
             checkInteractions = get(),
+            permissions = get(),
         )
     }
     viewModel {

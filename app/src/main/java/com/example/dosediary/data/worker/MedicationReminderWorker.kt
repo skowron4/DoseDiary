@@ -3,32 +3,31 @@ package com.example.dosediary.data.worker
 import android.content.Context
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
+import com.example.dosediary.domain.model.ReminderTime
+import com.example.dosediary.domain.usecase.HandleIntakeDueUseCase
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.get
 
 /**
- * Fires a local notification for a medication. Scheduled as a 24h periodic job by
- * [WorkManagerReminderScheduler]; all data it needs is passed via input data, so the worker has no
- * dependency on the database or DI graph.
+ * The inexact path of a reminder (used when exact alarms are not allowed): runs when a queued one-time
+ * job is due and hands over to [HandleIntakeDueUseCase], which notifies and queues the next one.
+ *
+ * Also runs jobs queued by earlier app versions; those carry the same keys, and are cancelled by the
+ * start-up sync, which replaces them with the new chain.
  */
 class MedicationReminderWorker(
     context: Context,
     params: WorkerParameters,
-) : CoroutineWorker(context, params) {
+) : CoroutineWorker(context, params), KoinComponent {
 
     override suspend fun doWork(): Result {
-        val medicationId = inputData.getString(KEY_MEDICATION_ID) ?: return Result.failure()
-        val medicationName = inputData.getString(KEY_MEDICATION_NAME) ?: return Result.failure()
-        // Jobs scheduled before multiple reminders existed carry no time; -1 keeps them working.
-        val hour = inputData.getInt(KEY_HOUR, NO_TIME)
-        val minute = inputData.getInt(KEY_MINUTE, NO_TIME)
-        ReminderNotifications.showReminder(applicationContext, medicationId, medicationName, hour, minute)
-        return Result.success()
-    }
+        val medicationId = inputData.getString(HybridReminderScheduler.EXTRA_MEDICATION_ID)
+            ?: return Result.failure()
+        val hour = inputData.getInt(HybridReminderScheduler.EXTRA_HOUR, -1)
+        val minute = inputData.getInt(HybridReminderScheduler.EXTRA_MINUTE, -1)
+        if (hour !in 0..23 || minute !in 0..59) return Result.failure()
 
-    companion object {
-        const val KEY_MEDICATION_ID = "medication_id"
-        const val KEY_MEDICATION_NAME = "medication_name"
-        const val KEY_HOUR = "reminder_hour"
-        const val KEY_MINUTE = "reminder_minute"
-        private const val NO_TIME = -1
+        get<HandleIntakeDueUseCase>()(medicationId, ReminderTime(hour, minute))
+        return Result.success()
     }
 }

@@ -195,6 +195,7 @@ private fun SymptomCard(
             Text(
                 text = item.title,
                 style = typography.titleSmall,
+                color = if (item.isLinkedToMedication) colors.primary else colors.onSurface,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )

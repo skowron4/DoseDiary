@@ -4,6 +4,7 @@ import com.example.dosediary.R
 import com.example.dosediary.domain.FakeMedicationRepository
 import com.example.dosediary.domain.FakeReminderScheduler
 import com.example.dosediary.domain.FakeSymptomRepository
+import com.example.dosediary.domain.model.Intake
 import com.example.dosediary.domain.model.Medication
 import com.example.dosediary.domain.model.ReminderTime
 import com.example.dosediary.domain.model.Symptom
@@ -29,7 +30,9 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
@@ -49,37 +52,50 @@ class MedicationItemUiTest {
     private val advil = Medication(id = "a", commercialName = "Advil", activeSubstance = "Ibuprofen")
 
     @Test
-    fun `plain medication gets the set-a-reminder prompt and no optional lines`() {
+    fun `plain medication gets the set-up-schedule prompt and no optional lines`() {
         val item = MedicationItemUi.from(advil, text)
 
         assertEquals("a", item.id)
         assertEquals("Advil", item.title)
         assertEquals("Advil", item.displayName)
         assertNull(item.nickname)
-        assertNull(item.dosage)
+        assertNull(item.frequency)
         assertEquals("Ibuprofen", item.substance)
         assertEquals("s${R.string.action_set_reminder}", item.reminderText)
     }
 
     @Test
-    fun `dosage line joins dose and interval, either may be missing`() {
-        val both = MedicationItemUi.from(advil.copy(doseAmount = "2 pills", intervalHours = 8), text)
-        assertEquals("2 pills, s${R.string.dosage_every_hours}(8)", both.dosage)
+    fun `frequency line says every day or every N days once there are intakes`() {
+        val intakes = listOf(Intake(ReminderTime(8, 0)))
 
-        assertEquals("2 pills", MedicationItemUi.from(advil.copy(doseAmount = "2 pills"), text).dosage)
-        assertEquals("s${R.string.dosage_every_hours}(8)", MedicationItemUi.from(advil.copy(intervalHours = 8), text).dosage)
-        assertNull(MedicationItemUi.from(advil.copy(doseAmount = "   "), text).dosage)
+        assertEquals(
+            "s${R.string.frequency_every_day}",
+            MedicationItemUi.from(advil.copy(intakes = intakes), text).frequency,
+        )
+        assertEquals(
+            "s${R.string.frequency_every_n_days}(3)",
+            MedicationItemUi.from(advil.copy(frequencyDays = 3, intakes = intakes), text).frequency,
+        )
+        // Without intakes there is nothing to describe, whatever the frequency is.
+        assertNull(MedicationItemUi.from(advil.copy(frequencyDays = 3), text).frequency)
     }
 
     @Test
-    fun `reminder times are formatted and joined once, in the mapper`() {
+    fun `intakes are formatted with their dose and joined once, in the mapper`() {
         val item = MedicationItemUi.from(
-            advil.copy(reminderTimes = listOf(ReminderTime(8, 0), ReminderTime(16, 30))),
+            advil.copy(
+                intakes = listOf(
+                    Intake(ReminderTime(8, 0), doseAmount = "2 pills"),
+                    Intake(ReminderTime(16, 30), doseAmount = null, notify = false),
+                    Intake(ReminderTime(21, 0), doseAmount = "  "),
+                ),
+            ),
             text,
         )
-        assertEquals("s${R.string.reminder_daily_at}(08:00, 16:30)", item.reminderText)
-    }
 
+        // A dose goes through the localised "time - dose" pattern; no dose is just the time.
+        assertEquals("s${R.string.intake_summary}(08:00,2 pills), 16:30, 21:00", item.reminderText)
+    }
     @Test
     fun `nickname is kept separately and drives displayName`() {
         val item = MedicationItemUi.from(advil.copy(customUserNickname = "Morning pill"), text)
@@ -104,7 +120,23 @@ class SymptomItemUiTest {
         assertEquals("dt1234", item.dateText)
         assertEquals("5", item.severityText)
         assertEquals("s${R.string.symptom_general}", item.title)
-        assertEquals("Advil", SymptomItemUi.from(symptom(medicationName = "Advil"), text).title)
+        assertFalse(item.isLinkedToMedication)
+    }
+
+    @Test
+    fun `a linked symptom is titled Related to plus the medication's name`() {
+        val item = SymptomItemUi.from(symptom(medicationName = "Morning pill"), text)
+
+        assertEquals("s${R.string.symptom_related_to}(Morning pill)", item.title)
+        assertTrue(item.isLinkedToMedication)
+    }
+
+    @Test
+    fun `a blank medication name counts as not linked`() {
+        val item = SymptomItemUi.from(symptom(medicationName = "  "), text)
+
+        assertEquals("s${R.string.symptom_general}", item.title)
+        assertFalse(item.isLinkedToMedication)
     }
 
     @Test
@@ -166,7 +198,7 @@ class ListViewModelsTest {
 
     @Test
     fun `dashboard rebuilds its strings when the language changes`() = runTest(dispatcher) {
-        val repo = FakeMedicationRepository(listOf(Medication("a", "Advil", intervalHours = 8)))
+        val repo = FakeMedicationRepository(listOf(Medication("a", "Advil", intakes = listOf(Intake(ReminderTime(8, 0))))))
         val formatter = FakeUiTextFormatter(locale = "en")
         val viewModel = DashboardViewModel(
             ObserveSavedMedicationsUseCase(repo),
@@ -179,13 +211,13 @@ class ListViewModelsTest {
         val collector = launch { viewModel.uiState.collect {} }
 
         val before = (viewModel.uiState.first { it is DashboardUiState.Success } as DashboardUiState.Success)
-        assertEquals(true, before.medications.single().dosage!!.startsWith("en:"))
+        assertEquals(true, before.medications.single().frequency!!.startsWith("en:"))
 
         formatter.locale = "pl"
         viewModel.onLocaleMaybeChanged()
 
         val after = viewModel.uiState.value as DashboardUiState.Success
-        assertEquals(true, after.medications.single().dosage!!.startsWith("pl:"))
+        assertEquals(true, after.medications.single().frequency!!.startsWith("pl:"))
         collector.cancel()
     }
 

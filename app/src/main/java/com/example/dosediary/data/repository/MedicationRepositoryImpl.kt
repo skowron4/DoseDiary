@@ -3,7 +3,7 @@ package com.example.dosediary.data.repository
 import com.example.dosediary.data.local.dao.MedicationDao
 import com.example.dosediary.data.local.toDomain
 import com.example.dosediary.data.local.toEntity
-import com.example.dosediary.data.local.toReminderEntities
+import com.example.dosediary.data.local.toIntakeEntities
 import com.example.dosediary.domain.model.Medication
 import com.example.dosediary.domain.model.MedicationDetails
 import com.example.dosediary.domain.repository.MedicationRepository
@@ -24,7 +24,7 @@ class MedicationRepositoryImpl(
     override suspend fun saveMedication(medication: Medication) {
         dao.insert(
             entity = medication.toEntity(savedAtMillis = clock.nowMillis()),
-            reminders = medication.reminderTimes.toReminderEntities(medication.id),
+            intakes = medication.intakes.toIntakeEntities(medication.id),
         )
     }
 
@@ -33,8 +33,8 @@ class MedicationRepositoryImpl(
     override suspend fun updateDetails(id: String, details: MedicationDetails) = dao.updateDetails(
         id = id,
         nickname = details.nickname,
-        doseAmount = details.doseAmount,
-        intervalHours = details.intervalHours,
-        reminders = details.reminderTimes.toReminderEntities(id),
+        frequencyDays = details.frequencyDays,
+        frequencyStartEpochDay = details.frequencyStartEpochDay,
+        intakes = details.intakes.toIntakeEntities(id),
     )
 }

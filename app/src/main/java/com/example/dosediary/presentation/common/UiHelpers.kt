@@ -28,8 +28,9 @@ fun DomainError.messageRes(): Int = when (this) {
         ValidationReason.NOTES_TOO_LONG -> R.string.error_notes_too_long
         ValidationReason.NICKNAME_TOO_LONG -> R.string.error_nickname_too_long
         ValidationReason.DOSE_TOO_LONG -> R.string.error_dose_too_long
-        ValidationReason.INTERVAL_OUT_OF_RANGE -> R.string.error_interval_range
-        ValidationReason.TOO_MANY_REMINDERS -> R.string.error_too_many_reminders
+        ValidationReason.FREQUENCY_OUT_OF_RANGE -> R.string.error_frequency_range
+        ValidationReason.TOO_MANY_INTAKES -> R.string.error_too_many_intakes
+        ValidationReason.DUPLICATE_INTAKE_TIME -> R.string.error_duplicate_intake_time
         ValidationReason.MEDICATION_NOT_FOUND -> R.string.error_medication_not_found
     }
     DomainError.Storage -> R.string.error_storage
