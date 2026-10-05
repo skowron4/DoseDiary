@@ -154,6 +154,11 @@ class SearchViewModel(
     }
 
     fun save(medication: Medication) {
+        // INTERACTION-CHECK HOOK (Phase 5 proposal): this is the single entry point through which a
+        // medication is added to the diary. Run CheckMedicationInteractionsUseCase(medication) here
+        // and only fall through to the save below when the result is not Warnings, or after the user
+        // confirms "Save anyway". See domain/interaction/CheckMedicationInteractionsUseCase.kt.
+
         // Saving a result is a strong signal the query was useful.
         recordCurrentQuery()
         viewModelScope.launch {
