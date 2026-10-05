@@ -3,6 +3,9 @@ package com.example.dosediary.presentation.search
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.dosediary.R
+import com.example.dosediary.domain.interaction.CheckMedicationInteractionsUseCase
+import com.example.dosediary.domain.interaction.InteractionCheckResult
+import com.example.dosediary.domain.interaction.InteractionWarning
 import com.example.dosediary.domain.model.AppResult
 import com.example.dosediary.domain.model.DomainError
 import com.example.dosediary.domain.model.Medication
@@ -55,6 +58,22 @@ data class SearchUiState(
     val localMatches: List<Medication> = emptyList(),
     /** Recent queries, most recent first. Shown while the query is blank. */
     val history: List<String> = emptyList(),
+    /** Ids of results whose interaction check is running; their save button is disabled. */
+    val checkingIds: Set<String> = emptySet(),
+    /** Set when saving found possible interactions and the user has to decide. */
+    val pendingInteraction: PendingInteraction? = null,
+)
+
+/** A medication waiting for the user's "Save anyway" / "Cancel" after interaction warnings were found. */
+data class PendingInteraction(
+    val medication: Medication,
+    val warnings: List<InteractionWarning>,
+)
+
+/** Interaction-check bookkeeping, kept in one flow so it combines as a single input. */
+private data class InteractionFlowState(
+    val checkingIds: Set<String> = emptySet(),
+    val pending: PendingInteraction? = null,
 )
 
 @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
@@ -66,6 +85,7 @@ class SearchViewModel(
     private val addToHistory: AddSearchHistoryUseCase,
     private val removeFromHistory: RemoveSearchHistoryUseCase,
     private val clearHistory: ClearSearchHistoryUseCase,
+    private val checkInteractions: CheckMedicationInteractionsUseCase,
 ) : ViewModel() {
 
     private val _query = MutableStateFlow("")
@@ -106,17 +126,22 @@ class SearchViewModel(
     private val history: Flow<List<String>> = observeHistory()
         .catch { emit(emptyList()) }
 
+    private val interactionState = MutableStateFlow(InteractionFlowState())
+
     val uiState: StateFlow<SearchUiState> = combine(
         resultState.onStart { emit(SearchResultState.Idle) },
         savedMedications,
         _query,
         history,
-    ) { result, saved, query, recent ->
+        interactionState,
+    ) { result, saved, query, recent, interaction ->
         SearchUiState(
             result = result,
             savedIds = saved.mapTo(HashSet()) { it.id },
             localMatches = if (query.isBlank()) emptyList() else saved.filter { it.matchesQuery(query) },
             history = recent,
+            checkingIds = interaction.checkingIds,
+            pendingInteraction = interaction.pending,
         )
     }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SearchUiState())
@@ -153,23 +178,56 @@ class SearchViewModel(
         retryTick.update { it + 1 }
     }
 
+    /**
+     * Single entry point through which a search result is added to the diary. It first checks the
+     * medication against the ones already saved:
+     *  - possible interactions found -> wait for the user ([confirmSaveDespiteInteractions] / [dismissInteractionWarning]);
+     *  - nothing found -> save;
+     *  - check impossible (offline, timeout, no label text) -> save anyway, so the app stays usable
+     *    offline, and say that the check did not happen.
+     */
     fun save(medication: Medication) {
-        // INTERACTION-CHECK HOOK (Phase 5 proposal): this is the single entry point through which a
-        // medication is added to the diary. Run CheckMedicationInteractionsUseCase(medication) here
-        // and only fall through to the save below when the result is not Warnings, or after the user
-        // confirms "Save anyway". See domain/interaction/CheckMedicationInteractionsUseCase.kt.
+        if (medication.id in interactionState.value.checkingIds || interactionState.value.pending != null) return
 
         // Saving a result is a strong signal the query was useful.
         recordCurrentQuery()
         viewModelScope.launch {
-            val message = runCatchingCancellable { saveMedication(medication) }.fold(
-                onSuccess = { UiMessage(R.string.medication_saved, listOf(medication.displayName)) },
-                onFailure = { UiMessage(R.string.error_storage) },
-            )
-            _messages.send(message)
+            interactionState.update { it.copy(checkingIds = it.checkingIds + medication.id) }
+            val result = runCatchingCancellable { checkInteractions(medication) }
+                .getOrElse { InteractionCheckResult.Unknown(DomainError.Unknown) }
+            interactionState.update { it.copy(checkingIds = it.checkingIds - medication.id) }
+
+            when (result) {
+                is InteractionCheckResult.Warnings -> interactionState.update {
+                    it.copy(pending = PendingInteraction(medication, result.items))
+                }
+                is InteractionCheckResult.Unknown -> persist(medication, interactionsUnchecked = result.error != null)
+                InteractionCheckResult.NothingFound -> persist(medication, interactionsUnchecked = false)
+            }
         }
     }
 
+    /** The user saw the warnings and still wants the medication in the diary. */
+    fun confirmSaveDespiteInteractions() {
+        val pending = interactionState.value.pending ?: return
+        interactionState.update { it.copy(pending = null) }
+        viewModelScope.launch { persist(pending.medication, interactionsUnchecked = false) }
+    }
+
+    fun dismissInteractionWarning() {
+        interactionState.update { it.copy(pending = null) }
+    }
+
+    private suspend fun persist(medication: Medication, interactionsUnchecked: Boolean) {
+        val message = runCatchingCancellable { saveMedication(medication) }.fold(
+            onSuccess = {
+                val text = if (interactionsUnchecked) R.string.medication_saved_unchecked else R.string.medication_saved
+                UiMessage(text, listOf(medication.displayName))
+            },
+            onFailure = { UiMessage(R.string.error_storage) },
+        )
+        _messages.send(message)
+    }
     private companion object {
         const val DEBOUNCE_MILLIS = 400L
     }
