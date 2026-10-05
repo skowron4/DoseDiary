@@ -3,6 +3,7 @@ package com.example.dosediary.domain.usecase
 import com.example.dosediary.domain.model.AppResult
 import com.example.dosediary.domain.model.DomainError
 import com.example.dosediary.domain.model.Symptom
+import com.example.dosediary.domain.model.SymptomTag
 import com.example.dosediary.domain.model.ValidationReason
 import com.example.dosediary.domain.repository.SymptomRepository
 import com.example.dosediary.domain.util.Clock
@@ -31,6 +32,7 @@ class LogSymptomUseCase(
         medicationId: String?,
         severity: Int,
         notes: String,
+        tags: Set<SymptomTag> = emptySet(),
         originalLoggedAtMillis: Long? = null,
     ): AppResult<Unit> {
         if (severity !in Symptom.MIN_SEVERITY..Symptom.MAX_SEVERITY) {
@@ -45,6 +47,7 @@ class LogSymptomUseCase(
                 id = id,
                 medicationId = medicationId,
                 severity = severity,
+                tags = tags,
                 notes = cleanedNotes,
                 loggedAtMillis = originalLoggedAtMillis ?: clock.nowMillis(),
             ),

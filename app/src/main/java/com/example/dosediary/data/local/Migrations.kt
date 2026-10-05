@@ -4,7 +4,7 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
 /**
- * v2 -> v3: dosage and multiple reminders per medication.
+ * v3 -> v4: dosage and multiple reminders per medication.
  *
  * - `medications` gains `doseAmount` and `intervalHours`, and loses the single
  *   `reminderHour`/`reminderMinute` pair.
@@ -15,7 +15,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
  * with foreign keys switched off, so dropping the old table does not trigger the `ON DELETE SET NULL`
  * rule of `symptoms.medicationId`; the symptom history is untouched.
  */
-val MIGRATION_2_3: Migration = object : Migration(2, 3) {
+val MIGRATION_3_4: Migration = object : Migration(3, 4) {
     override fun migrate(db: SupportSQLiteDatabase) {
         db.execSQL(
             """

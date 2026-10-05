@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.DoseDiary" parent="android:Theme.Material.Light.NoActionBar" />
+    <!-- AppCompat parent: required by AppCompatActivity (per-app language support). Compose draws all UI. -->
+    <style name="Theme.DoseDiary" parent="Theme.AppCompat.Light.NoActionBar" />
 </resources>
