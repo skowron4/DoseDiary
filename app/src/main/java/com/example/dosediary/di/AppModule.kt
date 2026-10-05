@@ -18,10 +18,10 @@ import com.example.dosediary.domain.repository.SearchHistoryRepository
 import com.example.dosediary.domain.repository.SettingsRepository
 import com.example.dosediary.domain.repository.SymptomRepository
 import com.example.dosediary.domain.usecase.AddSearchHistoryUseCase
-import com.example.dosediary.domain.usecase.CancelReminderUseCase
 import com.example.dosediary.domain.usecase.ClearSearchHistoryUseCase
 import com.example.dosediary.domain.usecase.DeleteMedicationUseCase
 import com.example.dosediary.domain.usecase.DeleteSymptomUseCase
+import com.example.dosediary.domain.usecase.GetMedicationUseCase
 import com.example.dosediary.domain.usecase.GetSymptomUseCase
 import com.example.dosediary.domain.usecase.LogSymptomUseCase
 import com.example.dosediary.domain.usecase.ObserveSavedMedicationsUseCase
@@ -30,15 +30,15 @@ import com.example.dosediary.domain.usecase.ObserveSettingsUseCase
 import com.example.dosediary.domain.usecase.ObserveSymptomsUseCase
 import com.example.dosediary.domain.usecase.RemoveSearchHistoryUseCase
 import com.example.dosediary.domain.usecase.SaveMedicationUseCase
-import com.example.dosediary.domain.usecase.ScheduleReminderUseCase
 import com.example.dosediary.domain.usecase.SearchMedicationUseCase
 import com.example.dosediary.domain.usecase.SetBiometricsEnabledUseCase
 import com.example.dosediary.domain.usecase.SetDarkModeUseCase
 import com.example.dosediary.domain.usecase.SetScreenProtectionEnabledUseCase
-import com.example.dosediary.domain.usecase.UpdateMedicationNicknameUseCase
+import com.example.dosediary.domain.usecase.UpdateMedicationDetailsUseCase
 import com.example.dosediary.domain.util.Clock
 import com.example.dosediary.presentation.app.AppViewModel
 import com.example.dosediary.presentation.dashboard.DashboardViewModel
+import com.example.dosediary.presentation.medication.EditMedicationViewModel
 import com.example.dosediary.presentation.search.SearchViewModel
 import com.example.dosediary.presentation.settings.SettingsViewModel
 import com.example.dosediary.presentation.symptom.AddSymptomViewModel
@@ -73,9 +73,8 @@ val appModule = module {
     factory { ObserveSavedMedicationsUseCase(get()) }
     factory { SaveMedicationUseCase(get()) }
     factory { DeleteMedicationUseCase(get(), get()) }
-    factory { ScheduleReminderUseCase(get(), get()) }
-    factory { CancelReminderUseCase(get(), get()) }
-    factory { UpdateMedicationNicknameUseCase(get(), get()) }
+    factory { GetMedicationUseCase(get()) }
+    factory { UpdateMedicationDetailsUseCase(get(), get()) }
     factory { ObserveSymptomsUseCase(get()) }
     factory { GetSymptomUseCase(get()) }
     factory { LogSymptomUseCase(get(), get()) }
@@ -97,9 +96,13 @@ val appModule = module {
             observeSymptoms = get(),
             deleteMedication = get(),
             deleteSymptom = get(),
-            scheduleReminder = get(),
-            cancelReminder = get(),
-            updateNickname = get(),
+        )
+    }
+    viewModel { params ->
+        EditMedicationViewModel(
+            medicationId = params.get<String>(),
+            getMedication = get(),
+            updateDetails = get(),
         )
     }
     viewModel {

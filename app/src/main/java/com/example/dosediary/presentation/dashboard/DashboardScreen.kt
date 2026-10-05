@@ -1,10 +1,5 @@
 package com.example.dosediary.presentation.dashboard
 
-import android.Manifest
-import android.os.Build
-import android.text.format.DateFormat
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -19,9 +14,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
@@ -30,7 +23,6 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -42,8 +34,6 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TimePicker
-import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -56,11 +46,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.core.app.NotificationManagerCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.dosediary.R
 import com.example.dosediary.domain.model.Medication
-import com.example.dosediary.domain.model.ReminderTime
 import com.example.dosediary.domain.model.Symptom
 import com.example.dosediary.presentation.common.EmptyState
 import com.example.dosediary.presentation.common.TopLevelContentInsets
@@ -84,6 +72,7 @@ private sealed interface PendingDelete {
 fun DashboardScreen(
     onLogSymptom: (medicationId: String?) -> Unit,
     onEditSymptom: (symptomId: Long) -> Unit,
+    onEditMedication: (medicationId: String) -> Unit,
     onOpenSearch: () -> Unit,
     viewModel: DashboardViewModel = koinViewModel(),
 ) {
@@ -92,16 +81,6 @@ fun DashboardScreen(
     val snackbarHostState = remember { SnackbarHostState() }
 
     var pendingDelete by remember { mutableStateOf<PendingDelete?>(null) }
-    var reminderTarget by remember { mutableStateOf<Medication?>(null) }
-    var nicknameTarget by remember { mutableStateOf<Medication?>(null) }
-    var awaitingPermission by remember { mutableStateOf<Pair<Medication, ReminderTime>?>(null) }
-
-    val permissionLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestPermission(),
-    ) { granted ->
-        awaitingPermission?.let { (medication, time) -> viewModel.setReminder(medication, time, granted) }
-        awaitingPermission = null
-    }
 
     LaunchedEffect(viewModel) {
         viewModel.messages.collect { snackbarHostState.showSnackbar(it.resolve(context)) }
@@ -126,39 +105,9 @@ fun DashboardScreen(
             onOpenSearch = onOpenSearch,
             onLogSymptomFor = { onLogSymptom(it.id) },
             onEditSymptom = { onEditSymptom(it.id) },
-            onEditNickname = { nicknameTarget = it },
-            onSetReminder = { reminderTarget = it },
-            onClearReminder = viewModel::clearReminder,
+            onEditMedication = { onEditMedication(it.id) },
             onDeleteMedication = { pendingDelete = PendingDelete.OfMedication(it) },
             onDeleteSymptom = { pendingDelete = PendingDelete.OfSymptom(it) },
-        )
-    }
-
-    nicknameTarget?.let { medication ->
-        NicknameDialog(
-            medication = medication,
-            onDismiss = { nicknameTarget = null },
-            onConfirm = { nickname ->
-                nicknameTarget = null
-                viewModel.setNickname(medication, nickname)
-            },
-        )
-    }
-
-    reminderTarget?.let { medication ->
-        ReminderTimePickerDialog(
-            initial = medication.reminderTime,
-            onDismiss = { reminderTarget = null },
-            onConfirm = { time ->
-                reminderTarget = null
-                val notificationsEnabled = NotificationManagerCompat.from(context).areNotificationsEnabled()
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !notificationsEnabled) {
-                    awaitingPermission = medication to time
-                    permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                } else {
-                    viewModel.setReminder(medication, time, notificationsEnabled)
-                }
-            },
         )
     }
 
@@ -198,18 +147,14 @@ private fun HomeContent(
     onOpenSearch: () -> Unit,
     onLogSymptomFor: (Medication) -> Unit,
     onEditSymptom: (Symptom) -> Unit,
-    onEditNickname: (Medication) -> Unit,
-    onSetReminder: (Medication) -> Unit,
-    onClearReminder: (Medication) -> Unit,
+    onEditMedication: (Medication) -> Unit,
     onDeleteMedication: (Medication) -> Unit,
     onDeleteSymptom: (Symptom) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val medicationActions = MedicationActions(
         onLogSymptom = onLogSymptomFor,
-        onEditNickname = onEditNickname,
-        onSetReminder = onSetReminder,
-        onClearReminder = onClearReminder,
+        onEdit = onEditMedication,
         onDelete = onDeleteMedication,
     )
 
@@ -249,9 +194,7 @@ private fun HomeContent(
 
 private class MedicationActions(
     val onLogSymptom: (Medication) -> Unit,
-    val onEditNickname: (Medication) -> Unit,
-    val onSetReminder: (Medication) -> Unit,
-    val onClearReminder: (Medication) -> Unit,
+    val onEdit: (Medication) -> Unit,
     val onDelete: (Medication) -> Unit,
 )
 
@@ -319,9 +262,7 @@ private fun LazyListScope.medicationItems(medications: List<Medication>, actions
         MedicationCard(
             medication = medication,
             onLogSymptom = { actions.onLogSymptom(medication) },
-            onEditNickname = { actions.onEditNickname(medication) },
-            onSetReminder = { actions.onSetReminder(medication) },
-            onClearReminder = { actions.onClearReminder(medication) },
+            onEdit = { actions.onEdit(medication) },
             onDelete = { actions.onDelete(medication) },
         )
     }
@@ -401,33 +342,4 @@ private fun SeverityBadge(severity: Int) {
             Text(severity.toString(), style = MaterialTheme.typography.titleMedium)
         }
     }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun ReminderTimePickerDialog(
-    initial: ReminderTime?,
-    onConfirm: (ReminderTime) -> Unit,
-    onDismiss: () -> Unit,
-) {
-    val state = rememberTimePickerState(
-        initialHour = initial?.hour ?: 8,
-        initialMinute = initial?.minute ?: 0,
-        is24Hour = DateFormat.is24HourFormat(LocalContext.current),
-    )
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.reminder_dialog_title)) },
-        text = {
-            Column(Modifier.verticalScroll(rememberScrollState())) { TimePicker(state = state) }
-        },
-        confirmButton = {
-            TextButton(onClick = { onConfirm(ReminderTime(state.hour, state.minute)) }) {
-                Text(stringResource(R.string.action_save))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) }
-        },
-    )
 }

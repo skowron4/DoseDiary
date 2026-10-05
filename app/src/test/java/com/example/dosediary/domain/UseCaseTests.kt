@@ -5,10 +5,8 @@ import com.example.dosediary.domain.model.DomainError
 import com.example.dosediary.domain.model.Medication
 import com.example.dosediary.domain.model.ReminderTime
 import com.example.dosediary.domain.model.ValidationReason
-import com.example.dosediary.domain.usecase.CancelReminderUseCase
 import com.example.dosediary.domain.usecase.DeleteMedicationUseCase
 import com.example.dosediary.domain.usecase.LogSymptomUseCase
-import com.example.dosediary.domain.usecase.ScheduleReminderUseCase
 import com.example.dosediary.domain.usecase.SearchMedicationUseCase
 import com.example.dosediary.domain.util.Clock
 import kotlinx.coroutines.flow.first
@@ -115,42 +113,6 @@ class LogSymptomUseCaseTest {
 
 class ReminderUseCasesTest {
     private val medication = Medication(id = "m1", commercialName = "Advil")
-
-    @Test
-    fun `scheduling persists the time and schedules the work`() = runTest {
-        val repository = FakeMedicationRepository(listOf(medication))
-        val scheduler = FakeReminderScheduler()
-        val time = ReminderTime(8, 30)
-
-        val result = ScheduleReminderUseCase(repository, scheduler)("m1", time)
-
-        assertEquals(AppResult.Success(Unit), result)
-        assertEquals(time, repository.getMedication("m1")?.reminderTime)
-        assertEquals(listOf(FakeReminderScheduler.Scheduled("m1", "Advil", time)), scheduler.scheduled)
-    }
-
-    @Test
-    fun `scheduling an unknown medication fails and schedules nothing`() = runTest {
-        val scheduler = FakeReminderScheduler()
-        val result = ScheduleReminderUseCase(FakeMedicationRepository(), scheduler)("nope", ReminderTime(8, 0))
-
-        assertEquals(
-            AppResult.Failure(DomainError.Validation(ValidationReason.MEDICATION_NOT_FOUND)),
-            result,
-        )
-        assertTrue(scheduler.scheduled.isEmpty())
-    }
-
-    @Test
-    fun `cancelling clears the stored time and cancels the work`() = runTest {
-        val repository = FakeMedicationRepository(listOf(medication.copy(reminderTime = ReminderTime(9, 0))))
-        val scheduler = FakeReminderScheduler()
-
-        CancelReminderUseCase(repository, scheduler)("m1")
-
-        assertNull(repository.getMedication("m1")?.reminderTime)
-        assertEquals(listOf("m1"), scheduler.cancelled)
-    }
 
     @Test
     fun `deleting a medication also cancels its reminder`() = runTest {

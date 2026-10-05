@@ -2,6 +2,7 @@ package com.example.dosediary.di
 
 import androidx.room.Room
 import com.example.dosediary.data.local.AppDatabase
+import com.example.dosediary.data.local.MIGRATION_2_3
 import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module
 
@@ -9,7 +10,9 @@ val databaseModule = module {
     single<AppDatabase> {
         // No destructive-migration fallback: this is user health data, so schema changes must ship
         // with real migrations.
-        Room.databaseBuilder(androidContext(), AppDatabase::class.java, AppDatabase.NAME).build()
+        Room.databaseBuilder(androidContext(), AppDatabase::class.java, AppDatabase.NAME)
+            .addMigrations(MIGRATION_2_3)
+            .build()
     }
     single { get<AppDatabase>().medicationDao() }
     single { get<AppDatabase>().symptomDao() }
