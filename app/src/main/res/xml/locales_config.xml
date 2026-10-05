@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Languages the app is translated into. Android 13+ lists exactly these under
+    Settings > System > Languages > App languages. Keep in sync with res/values-<tag>/ and AppLanguage.
+-->
+<locale-config xmlns:android="http://schemas.android.com/apk/res/android">
+    <locale android:name="en" />
+    <locale android:name="pl" />
+</locale-config>

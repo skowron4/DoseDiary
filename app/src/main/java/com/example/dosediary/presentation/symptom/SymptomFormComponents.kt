@@ -80,7 +80,7 @@ fun SeveritySelector(
                 modifier = Modifier.weight(1f),
             )
             Text(
-                text = "$severity / ${Symptom.MAX_SEVERITY}",
+                text = stringResource(R.string.counter_of, severity, Symptom.MAX_SEVERITY),
                 style = MaterialTheme.typography.titleLarge,
                 color = color,
             )
