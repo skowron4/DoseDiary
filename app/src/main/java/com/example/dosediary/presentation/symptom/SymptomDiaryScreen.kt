@@ -37,6 +37,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -49,6 +50,7 @@ import com.example.dosediary.presentation.common.ErrorState
 import com.example.dosediary.presentation.common.LoadingState
 import com.example.dosediary.presentation.common.TopLevelContentInsets
 import com.example.dosediary.presentation.common.formatDateTime
+import com.example.dosediary.presentation.common.severityColor
 import org.koin.androidx.compose.koinViewModel
 
 /**
@@ -185,6 +187,7 @@ private fun SymptomCard(
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
+                SymptomTagRow(tags = symptom.tags, modifier = Modifier.padding(top = 6.dp))
                 if (symptom.notes.isNotBlank()) {
                     Text(
                         text = symptom.notes,
@@ -204,12 +207,13 @@ private fun SymptomCard(
 
 @Composable
 private fun SeverityBadge(severity: Int) {
-    val (container, content) = when {
-        severity <= 3 -> MaterialTheme.colorScheme.tertiaryContainer to MaterialTheme.colorScheme.onTertiaryContainer
-        severity <= 7 -> MaterialTheme.colorScheme.secondaryContainer to MaterialTheme.colorScheme.onSecondaryContainer
-        else -> MaterialTheme.colorScheme.errorContainer to MaterialTheme.colorScheme.onErrorContainer
-    }
-    Surface(shape = CircleShape, color = container, contentColor = content, modifier = Modifier.size(44.dp)) {
+    // Same green -> yellow -> red scale as the severity slider; every stop is light enough for dark text.
+    Surface(
+        shape = CircleShape,
+        color = severityColor(severity),
+        contentColor = Color.Black,
+        modifier = Modifier.size(44.dp),
+    ) {
         Box(contentAlignment = Alignment.Center) {
             Text(severity.toString(), style = MaterialTheme.typography.titleMedium)
         }
