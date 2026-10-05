@@ -5,6 +5,8 @@ import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStoreFile
 import androidx.work.WorkManager
+import com.example.dosediary.BuildConfig
+import com.example.dosediary.data.analytics.DebugAnalyticsLogger
 import com.example.dosediary.data.locale.AppCompatLanguageManager
 import com.example.dosediary.data.preferences.DataStoreSearchHistoryRepository
 import com.example.dosediary.data.preferences.DataStoreSettingsRepository
@@ -15,6 +17,8 @@ import com.example.dosediary.data.repository.SymptomRepositoryImpl
 import com.example.dosediary.data.worker.AndroidReminderNotifier
 import com.example.dosediary.data.worker.AndroidReminderPermissions
 import com.example.dosediary.data.worker.HybridReminderScheduler
+import com.example.dosediary.domain.analytics.AnalyticsLogger
+import com.example.dosediary.domain.analytics.NoOpAnalyticsLogger
 import com.example.dosediary.domain.interaction.CheckMedicationInteractionsUseCase
 import com.example.dosediary.domain.interaction.DrugInteractionRepository
 import com.example.dosediary.domain.repository.DrugSearchRepository
@@ -67,6 +71,8 @@ val appModule = module {
 
     // --- Platform services -------------------------------------------------------------------
     single<Clock> { Clock { System.currentTimeMillis() } }
+    // Events only reach Logcat in debug builds; release builds drop them.
+    single<AnalyticsLogger> { if (BuildConfig.DEBUG) DebugAnalyticsLogger() else NoOpAnalyticsLogger }
     single { WorkManager.getInstance(androidContext()) }
     single<DataStore<Preferences>> {
         PreferenceDataStoreFactory.create(
@@ -97,16 +103,16 @@ val appModule = module {
     // --- Use cases ---------------------------------------------------------------------------
     factory { SearchMedicationUseCase(get()) }
     factory { ObserveSavedMedicationsUseCase(get()) }
-    factory { SaveMedicationUseCase(get()) }
+    factory { SaveMedicationUseCase(repository = get(), analytics = get()) }
     factory { DeleteMedicationUseCase(get(), get()) }
     factory { GetMedicationUseCase(get()) }
-    factory { CheckMedicationInteractionsUseCase(interactions = get(), medications = get()) }
+    factory { CheckMedicationInteractionsUseCase(interactions = get(), medications = get(), analytics = get()) }
     factory { UpdateMedicationDetailsUseCase(get(), get(), get()) }
     factory { SyncRemindersUseCase(get(), get()) }
     factory { HandleIntakeDueUseCase(repository = get(), scheduler = get(), notifier = get(), clock = get()) }
     factory { ObserveSymptomsUseCase(get()) }
     factory { GetSymptomUseCase(get()) }
-    factory { LogSymptomUseCase(get(), get()) }
+    factory { LogSymptomUseCase(repository = get(), clock = get(), analytics = get()) }
     factory { DeleteSymptomUseCase(get()) }
     factory { ObserveSearchHistoryUseCase(get()) }
     factory { AddSearchHistoryUseCase(get()) }

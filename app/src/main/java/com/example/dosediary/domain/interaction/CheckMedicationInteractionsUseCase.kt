@@ -1,5 +1,8 @@
 package com.example.dosediary.domain.interaction
 
+import com.example.dosediary.domain.analytics.AnalyticsEvents
+import com.example.dosediary.domain.analytics.AnalyticsLogger
+import com.example.dosediary.domain.analytics.NoOpAnalyticsLogger
 import com.example.dosediary.domain.model.AppResult
 import com.example.dosediary.domain.model.DomainError
 import com.example.dosediary.domain.model.Medication
@@ -18,6 +21,7 @@ import kotlinx.coroutines.withTimeoutOrNull
 class CheckMedicationInteractionsUseCase(
     private val interactions: DrugInteractionRepository,
     private val medications: MedicationRepository,
+    private val analytics: AnalyticsLogger = NoOpAnalyticsLogger,
 ) {
     suspend operator fun invoke(candidate: Medication): InteractionCheckResult {
         val saved = try {
@@ -43,11 +47,21 @@ class CheckMedicationInteractionsUseCase(
                 } else {
                     InteractionMatcher.findWarnings(text, saved)
                         .takeIf { it.isNotEmpty() }
-                        ?.let { InteractionCheckResult.Warnings(it) }
+                        ?.let { InteractionCheckResult.Warnings(it).also(::logWarning) }
                         ?: InteractionCheckResult.NothingFound
                 }
             }
         }
+    }
+
+    private fun logWarning(warnings: InteractionCheckResult.Warnings) {
+        analytics.logEvent(
+            AnalyticsEvents.INTERACTION_WARNING_SHOWN,
+            mapOf(
+                AnalyticsEvents.PARAM_WARNING_COUNT to warnings.items.size.toString(),
+                AnalyticsEvents.PARAM_HIGHEST_SEVERITY to warnings.highestSeverity.name,
+            ),
+        )
     }
 
     companion object {

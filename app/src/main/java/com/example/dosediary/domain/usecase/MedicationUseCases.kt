@@ -1,5 +1,8 @@
 package com.example.dosediary.domain.usecase
 
+import com.example.dosediary.domain.analytics.AnalyticsEvents
+import com.example.dosediary.domain.analytics.AnalyticsLogger
+import com.example.dosediary.domain.analytics.NoOpAnalyticsLogger
 import com.example.dosediary.domain.model.AppResult
 import com.example.dosediary.domain.model.DomainError
 import com.example.dosediary.domain.model.Intake
@@ -37,8 +40,21 @@ class ObserveSavedMedicationsUseCase(private val repository: MedicationRepositor
     operator fun invoke(): Flow<List<Medication>> = repository.observeMedications()
 }
 
-class SaveMedicationUseCase(private val repository: MedicationRepository) {
-    suspend operator fun invoke(medication: Medication) = repository.saveMedication(medication)
+/** Saves a medication to the diary. Saving one that is already there is a no-op and logs nothing. */
+class SaveMedicationUseCase(
+    private val repository: MedicationRepository,
+    private val analytics: AnalyticsLogger = NoOpAnalyticsLogger,
+) {
+    suspend operator fun invoke(medication: Medication) {
+        val isNew = repository.getMedication(medication.id) == null
+        repository.saveMedication(medication)
+        if (isNew) {
+            analytics.logEvent(
+                AnalyticsEvents.MEDICATION_ADDED,
+                mapOf(AnalyticsEvents.PARAM_INTAKE_COUNT to medication.intakes.size.toString()),
+            )
+        }
+    }
 }
 
 /** Deletes a medication and makes sure its reminders no longer fire. */
