@@ -19,6 +19,7 @@ data class DrugLabelDto(
     val openfda: OpenFdaDto? = null,
     val purpose: List<String>? = null,
     @SerialName("indications_and_usage") val indicationsAndUsage: List<String>? = null,
+    @SerialName("drug_interactions") val drugInteractions: List<String>? = null,
 )
 
 @Serializable

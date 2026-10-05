@@ -1,36 +1,40 @@
 package com.example.dosediary.domain.interaction
 
 import com.example.dosediary.domain.model.AppResult
+import com.example.dosediary.domain.model.DomainError
 import com.example.dosediary.domain.model.Medication
 import com.example.dosediary.domain.repository.MedicationRepository
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withTimeoutOrNull
 
 /**
- * DRAFT (Phase 5): checks a medication the user is about to add against the ones already saved.
+ * Checks a medication (about to be added, or already saved) against the user's *other* saved ones.
  *
- * Intended call site (not wired yet), in `SearchViewModel.save`:
- *
- * ```
- * fun save(medication: Medication) = viewModelScope.launch {
- *     when (val check = checkInteractions(medication)) {
- *         is Warnings -> _pendingInteraction.value = PendingInteraction(medication, check.items) // dialog
- *         else        -> persist(medication)            // NothingFound / Unknown: never block saving
- *     }
- * }
- * fun confirmSaveDespiteWarnings() = persist(pending.medication)   // "Save anyway"
- * fun dismissInteractionWarning()  { _pendingInteraction.value = null } // "Cancel"
- * ```
+ * This never throws and never blocks for long: every failure (offline, server error, timeout, local
+ * storage) comes back as [InteractionCheckResult.Unknown], so callers can always carry on saving or
+ * editing. Coroutine cancellation is respected.
  */
 class CheckMedicationInteractionsUseCase(
     private val interactions: DrugInteractionRepository,
     private val medications: MedicationRepository,
 ) {
     suspend operator fun invoke(candidate: Medication): InteractionCheckResult {
-        // Only compare against OTHER saved medications (the candidate may already be saved).
-        val saved = medications.observeMedications().first().filter { it.id != candidate.id }
-        if (saved.isEmpty()) return InteractionCheckResult.NothingFound
+        val saved = try {
+            // Only compare against OTHER saved medications (the candidate may already be saved).
+            medications.observeMedications().first().filter { it.id != candidate.id }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            return InteractionCheckResult.Unknown(DomainError.Storage)
+        }
+        if (saved.none { InteractionMatcher.substancesOf(it).isNotEmpty() }) return InteractionCheckResult.NothingFound
 
-        return when (val result = interactions.getInteractionText(candidate)) {
+        // The HTTP client has its own, longer timeouts; this keeps "Save" from feeling stuck.
+        val result = withTimeoutOrNull(CHECK_TIMEOUT_MILLIS) { interactions.getInteractionText(candidate) }
+            ?: return InteractionCheckResult.Unknown(DomainError.Timeout)
+
+        return when (result) {
             is AppResult.Failure -> InteractionCheckResult.Unknown(result.error)
             is AppResult.Success -> {
                 val text = result.data
@@ -44,5 +48,9 @@ class CheckMedicationInteractionsUseCase(
                 }
             }
         }
+    }
+
+    companion object {
+        const val CHECK_TIMEOUT_MILLIS = 8_000L
     }
 }

@@ -31,6 +31,23 @@ class OpenFdaApi(private val client: HttpClient) {
         }
     }
 
+    /**
+     * Fetches the single label with the given id (medication ids are OpenFDA label ids, either `id`
+     * or `set_id`). Like [searchByBrandName], a `404` means "no such label" and yields an empty result.
+     */
+    suspend fun getLabelById(id: String): DrugLabelResponseDto {
+        val sanitized = id.filter { it.isLetterOrDigit() || it == '-' }
+        if (sanitized.isEmpty()) return DrugLabelResponseDto()
+        return try {
+            client.get(ENDPOINT) {
+                parameter("search", "id:\"$sanitized\" OR set_id:\"$sanitized\"")
+                parameter("limit", 1)
+            }.body()
+        } catch (e: ClientRequestException) {
+            if (e.response.status == HttpStatusCode.NotFound) DrugLabelResponseDto() else throw e
+        }
+    }
+
     /** Strips characters that have special meaning in OpenFDA's (Elasticsearch) query syntax. */
     private fun String.sanitizeForSearch(): String =
         replace(Regex("[^\\p{L}\\p{N} \\-]"), " ")

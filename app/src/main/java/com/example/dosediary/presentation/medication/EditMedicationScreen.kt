@@ -60,6 +60,7 @@ import com.example.dosediary.domain.model.ReminderTime
 import com.example.dosediary.presentation.common.ErrorState
 import com.example.dosediary.presentation.common.LoadingState
 import com.example.dosediary.presentation.common.format
+import com.example.dosediary.presentation.interaction.InteractionBanner
 
 /** Edit form for a saved medication: nickname, dose, dosing interval and any number of daily reminders. */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -122,6 +123,7 @@ fun EditMedicationScreen(
                     onIntervalChange = viewModel::onIntervalChange,
                     onAddReminder = { showTimePicker = true },
                     onRemoveReminder = viewModel::onRemoveReminder,
+                    onRetryInteractions = viewModel::retryInteractionCheck,
                     onSave = {
                         val needsPermission = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
                             state.reminderTimes.isNotEmpty() &&
@@ -156,6 +158,7 @@ private fun EditMedicationForm(
     onIntervalChange: (String) -> Unit,
     onAddReminder: () -> Unit,
     onRemoveReminder: (ReminderTime) -> Unit,
+    onRetryInteractions: () -> Unit,
     onSave: () -> Unit,
 ) {
     Column(
@@ -176,6 +179,8 @@ private fun EditMedicationForm(
                 )
             }
         }
+
+        InteractionBanner(state = state.interactions, onRetry = onRetryInteractions)
 
         OutlinedTextField(
             value = state.nickname,

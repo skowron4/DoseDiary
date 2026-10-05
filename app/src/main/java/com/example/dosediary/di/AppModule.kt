@@ -8,10 +8,13 @@ import androidx.work.WorkManager
 import com.example.dosediary.data.locale.AppCompatLanguageManager
 import com.example.dosediary.data.preferences.DataStoreSearchHistoryRepository
 import com.example.dosediary.data.preferences.DataStoreSettingsRepository
+import com.example.dosediary.data.repository.DrugInteractionRepositoryImpl
 import com.example.dosediary.data.repository.DrugSearchRepositoryImpl
 import com.example.dosediary.data.repository.MedicationRepositoryImpl
 import com.example.dosediary.data.repository.SymptomRepositoryImpl
 import com.example.dosediary.data.worker.WorkManagerReminderScheduler
+import com.example.dosediary.domain.interaction.CheckMedicationInteractionsUseCase
+import com.example.dosediary.domain.interaction.DrugInteractionRepository
 import com.example.dosediary.domain.repository.DrugSearchRepository
 import com.example.dosediary.domain.repository.LanguageManager
 import com.example.dosediary.domain.repository.MedicationRepository
@@ -65,6 +68,7 @@ val appModule = module {
 
     // --- Repositories ------------------------------------------------------------------------
     single<DrugSearchRepository> { DrugSearchRepositoryImpl(api = get(), ioDispatcher = Dispatchers.IO) }
+    single<DrugInteractionRepository> { DrugInteractionRepositoryImpl(api = get(), ioDispatcher = Dispatchers.IO) }
     single<MedicationRepository> { MedicationRepositoryImpl(dao = get(), clock = get()) }
     single<SymptomRepository> { SymptomRepositoryImpl(dao = get()) }
     single<SettingsRepository> { DataStoreSettingsRepository(dataStore = get()) }
@@ -78,6 +82,7 @@ val appModule = module {
     factory { SaveMedicationUseCase(get()) }
     factory { DeleteMedicationUseCase(get(), get()) }
     factory { GetMedicationUseCase(get()) }
+    factory { CheckMedicationInteractionsUseCase(interactions = get(), medications = get()) }
     factory { UpdateMedicationDetailsUseCase(get(), get()) }
     factory { ObserveSymptomsUseCase(get()) }
     factory { GetSymptomUseCase(get()) }
@@ -106,6 +111,7 @@ val appModule = module {
             medicationId = params.get<String>(),
             getMedication = get(),
             updateDetails = get(),
+            checkInteractions = get(),
         )
     }
     viewModel {
@@ -117,6 +123,7 @@ val appModule = module {
             addToHistory = get(),
             removeFromHistory = get(),
             clearHistory = get(),
+            checkInteractions = get(),
         )
     }
     viewModel { params ->

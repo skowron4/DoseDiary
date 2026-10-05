@@ -127,4 +127,19 @@
     <string name="error_medication_not_found">Tego leku nie ma już w Twoim dzienniku.</string>
     <string name="error_storage">Brak dostępu do pamięci lokalnej. Spróbuj ponownie.</string>
     <string name="error_unknown">Coś poszło nie tak. Spróbuj ponownie.</string>
+
+    <!-- Drug interactions -->
+    <string name="interaction_title">Możliwe interakcje</string>
+    <string name="interaction_item_title">%1$s – %2$s</string>
+    <string name="interaction_severity_high">poważne ryzyko</string>
+    <string name="interaction_severity_moderate">umiarkowane ryzyko</string>
+    <string name="interaction_severity_info">wzmianka</string>
+    <string name="interaction_disclaimer">Szacunek na podstawie sformułowań z ulotki tego leku, a nie ocena medyczna. Przed łączeniem leków zapytaj farmaceutę lub lekarza.</string>
+    <string name="interaction_checking">Sprawdzanie interakcji…</string>
+    <string name="interaction_nothing_found">Ulotka tego leku nie wspomina o Twoich innych lekach. To nie gwarantuje, że można je bezpiecznie łączyć.</string>
+    <string name="interaction_unavailable">Nie można teraz sprawdzić interakcji. Reszta aplikacji działa normalnie; spróbuj ponownie później.</string>
+    <string name="interaction_no_data">Ulotka tego leku nie zawiera informacji o interakcjach.</string>
+    <string name="interaction_dialog_title">Znaleziono możliwe interakcje</string>
+    <string name="action_save_anyway">Zapisz mimo to</string>
+    <string name="medication_saved_unchecked">Zapisano lek %1$s w dzienniku. Nie udało się sprawdzić interakcji.</string>
 </resources>

@@ -293,6 +293,7 @@ fun LazyListScope.openFdaResultItems(
                 OpenFdaResultCard(
                     medication = medication,
                     isSaved = medication.id in state.savedIds,
+                    isChecking = medication.id in state.checkingIds,
                     onSave = { onSave(medication) },
                 )
             }
@@ -325,6 +326,7 @@ private fun InlineError(message: String, onRetry: () -> Unit) {
 private fun OpenFdaResultCard(
     medication: Medication,
     isSaved: Boolean,
+    isChecking: Boolean,
     onSave: () -> Unit,
 ) {
     Card(modifier = Modifier.fillMaxWidth()) {
@@ -362,7 +364,14 @@ private fun OpenFdaResultCard(
                         Text(stringResource(R.string.action_saved), Modifier.padding(start = 8.dp))
                     }
                 } else {
-                    Button(onClick = onSave) { Text(stringResource(R.string.action_save_medication)) }
+                    Button(onClick = onSave, enabled = !isChecking) {
+                        if (isChecking) {
+                            CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
+                            Text(stringResource(R.string.interaction_checking), Modifier.padding(start = 8.dp))
+                        } else {
+                            Text(stringResource(R.string.action_save_medication))
+                        }
+                    }
                 }
             }
         }
