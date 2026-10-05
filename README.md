@@ -63,7 +63,7 @@ To run the debug version of the app locally:
 
 # Run Instrumented Tests (Requires connected device/emulator)
 ./gradlew connectedDebugAndroidTest
-``'
+```
 
 ### Release Build Setup
 To ensure repository security, release signing credentials are not tracked in Git. To build a signed release APK (which utilizes R8 minification and resource shrinking), you must configure a `local.properties` file in the project root:
