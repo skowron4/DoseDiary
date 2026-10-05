@@ -7,6 +7,9 @@ import kotlinx.serialization.Serializable
 
 @Serializable data object SettingsRoute
 
+/** Full-screen search overlay (recent searches, saved matches and OpenFDA results). */
+@Serializable data object SearchRoute
+
 /**
  * @param medicationId Medication to preselect when logging a new symptom.
  * @param symptomId Existing symptom to edit; `null` creates a new one.

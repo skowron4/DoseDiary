@@ -44,8 +44,11 @@
     <string name="delete_symptom_title">Delete symptom entry?</string>
     <string name="delete_symptom_text">This entry will be permanently deleted.</string>
 
-    <!-- Search (sticky bar on Home) -->
+    <!-- Search (entry bar on Home + full-screen overlay) -->
     <string name="search_hint">Search medications (e.g. Advil)</string>
+    <string name="search_recent">Recent searches</string>
+    <string name="search_clear_history">Clear all</string>
+    <string name="search_remove_history_item">Remove “%1$s” from recent searches</string>
     <string name="section_in_my_diary">In my diary</string>
     <string name="section_openfda">From the OpenFDA database</string>
     <string name="search_no_local_matches">None of your saved medications match.</string>
