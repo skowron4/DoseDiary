@@ -141,7 +141,7 @@ private fun SymptomForm(
             maxLines = 6,
             supportingText = {
                 Text(
-                    text = "${state.notes.length} / ${Symptom.MAX_NOTES_LENGTH}",
+                    text = stringResource(R.string.counter_of, state.notes.length, Symptom.MAX_NOTES_LENGTH),
                     modifier = Modifier.fillMaxWidth(),
                     textAlign = TextAlign.End,
                 )
