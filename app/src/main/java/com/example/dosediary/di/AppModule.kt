@@ -5,6 +5,7 @@ import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStoreFile
 import androidx.work.WorkManager
+import com.example.dosediary.data.locale.AppCompatLanguageManager
 import com.example.dosediary.data.preferences.DataStoreSearchHistoryRepository
 import com.example.dosediary.data.preferences.DataStoreSettingsRepository
 import com.example.dosediary.data.repository.DrugSearchRepositoryImpl
@@ -12,6 +13,7 @@ import com.example.dosediary.data.repository.MedicationRepositoryImpl
 import com.example.dosediary.data.repository.SymptomRepositoryImpl
 import com.example.dosediary.data.worker.WorkManagerReminderScheduler
 import com.example.dosediary.domain.repository.DrugSearchRepository
+import com.example.dosediary.domain.repository.LanguageManager
 import com.example.dosediary.domain.repository.MedicationRepository
 import com.example.dosediary.domain.repository.ReminderScheduler
 import com.example.dosediary.domain.repository.SearchHistoryRepository
@@ -39,6 +41,7 @@ import com.example.dosediary.domain.usecase.UpdateMedicationNicknameUseCase
 import com.example.dosediary.domain.util.Clock
 import com.example.dosediary.presentation.app.AppViewModel
 import com.example.dosediary.presentation.dashboard.DashboardViewModel
+import com.example.dosediary.presentation.medication.MedicationDetailsViewModel
 import com.example.dosediary.presentation.search.SearchViewModel
 import com.example.dosediary.presentation.settings.SettingsViewModel
 import com.example.dosediary.presentation.symptom.AddSymptomViewModel
@@ -65,6 +68,7 @@ val appModule = module {
     single<MedicationRepository> { MedicationRepositoryImpl(dao = get(), clock = get()) }
     single<SymptomRepository> { SymptomRepositoryImpl(dao = get()) }
     single<SettingsRepository> { DataStoreSettingsRepository(dataStore = get()) }
+    single<LanguageManager> { AppCompatLanguageManager() }
     single<SearchHistoryRepository> { DataStoreSearchHistoryRepository(dataStore = get()) }
     single<ReminderScheduler> { WorkManagerReminderScheduler(workManager = get()) }
 
@@ -95,11 +99,17 @@ val appModule = module {
         DashboardViewModel(
             observeMedications = get(),
             observeSymptoms = get(),
-            deleteMedication = get(),
             deleteSymptom = get(),
+        )
+    }
+    viewModel { params ->
+        MedicationDetailsViewModel(
+            medicationId = params.get<String>(),
+            observeMedications = get(),
             scheduleReminder = get(),
             cancelReminder = get(),
             updateNickname = get(),
+            deleteMedication = get(),
         )
     }
     viewModel {

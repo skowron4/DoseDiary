@@ -25,7 +25,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -44,6 +43,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.dosediary.R
 import com.example.dosediary.domain.model.Medication
 import com.example.dosediary.domain.model.Symptom
+import com.example.dosediary.domain.model.SymptomTag
 import com.example.dosediary.presentation.common.ErrorState
 import com.example.dosediary.presentation.common.LoadingState
 
@@ -90,6 +90,7 @@ fun AddSymptomScreen(
                     state = state,
                     onMedicationSelected = viewModel::onMedicationSelected,
                     onSeverityChange = viewModel::onSeverityChange,
+                    onTagToggled = viewModel::onTagToggled,
                     onNotesChange = viewModel::onNotesChange,
                     onSave = viewModel::save,
                 )
@@ -103,6 +104,7 @@ private fun SymptomForm(
     state: AddSymptomUiState,
     onMedicationSelected: (String?) -> Unit,
     onSeverityChange: (Int) -> Unit,
+    onTagToggled: (SymptomTag) -> Unit,
     onNotesChange: (String) -> Unit,
     onSave: () -> Unit,
 ) {
@@ -120,38 +122,15 @@ private fun SymptomForm(
             onSelected = onMedicationSelected,
         )
 
-        Column {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(stringResource(R.string.severity_label), style = MaterialTheme.typography.titleMedium)
-                Text(
-                    text = "${state.severity} / ${Symptom.MAX_SEVERITY}",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.primary,
-                )
-            }
-            Slider(
-                value = state.severity.toFloat(),
-                onValueChange = { onSeverityChange(it.toInt()) },
-                valueRange = Symptom.MIN_SEVERITY.toFloat()..Symptom.MAX_SEVERITY.toFloat(),
-                steps = Symptom.MAX_SEVERITY - Symptom.MIN_SEVERITY - 1,
-            )
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text(
-                    stringResource(R.string.severity_mild),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                Text(
-                    stringResource(R.string.severity_severe),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-        }
+        SeveritySelector(
+            severity = state.severity,
+            onSeverityChange = onSeverityChange,
+        )
+
+        QuickTagSelector(
+            selected = state.selectedTags,
+            onToggle = onTagToggled,
+        )
 
         OutlinedTextField(
             value = state.notes,
@@ -162,7 +141,7 @@ private fun SymptomForm(
             maxLines = 6,
             supportingText = {
                 Text(
-                    text = "${state.notes.length} / ${Symptom.MAX_NOTES_LENGTH}",
+                    text = stringResource(R.string.counter_of, state.notes.length, Symptom.MAX_NOTES_LENGTH),
                     modifier = Modifier.fillMaxWidth(),
                     textAlign = TextAlign.End,
                 )

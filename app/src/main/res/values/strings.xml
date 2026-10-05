@@ -1,5 +1,8 @@
 <resources>
-    <string name="app_name">DoseDiary</string>
+    <string name="app_name" translatable="false">DoseDiary</string>
+
+    <!-- "current / maximum" counters (severity, character limits). Kept as a resource so a locale can reorder it. -->
+    <string name="counter_of" translatable="false">%1$d / %2$d</string>
 
     <!-- Navigation -->
     <string name="nav_dashboard">Home</string>
@@ -33,6 +36,11 @@
     <string name="action_set_reminder">Set daily reminder</string>
     <string name="symptom_general">General (no medication)</string>
     <string name="reminder_daily_at">Daily at %1$s</string>
+    <string name="reminder_section_title">Daily reminder</string>
+    <string name="reminder_none">No reminder set</string>
+    <string name="action_change_reminder">Change time</string>
+    <string name="action_remove_reminder">Remove reminder</string>
+    <string name="medication_purpose_label">Purpose</string>
     <string name="reminder_dialog_title">Daily reminder time</string>
     <string name="reminder_set">Reminder for %1$s set for %2$s daily</string>
     <string name="reminder_set_no_permission">Reminder saved for %1$s, but notifications are turned off, so you will not be alerted.</string>
@@ -72,7 +80,21 @@
     <string name="severity_label">Severity</string>
     <string name="severity_mild">1 – Mild</string>
     <string name="severity_severe">10 – Severe</string>
-    <string name="notes_label">Notes (optional)</string>
+    <string name="severity_level_mild">Mild</string>
+    <string name="severity_level_moderate">Moderate</string>
+    <string name="severity_level_severe">Severe</string>
+    <string name="quick_tags_label">What are you feeling?</string>
+    <string name="tag_headache">Headache</string>
+    <string name="tag_nausea">Nausea</string>
+    <string name="tag_fatigue">Fatigue</string>
+    <string name="tag_fever">Fever</string>
+    <string name="tag_dizziness">Dizziness</string>
+    <string name="tag_stomach_pain">Stomach pain</string>
+    <string name="tag_cough">Cough</string>
+    <string name="tag_rash">Rash</string>
+    <string name="tag_insomnia">Insomnia</string>
+    <string name="tag_muscle_pain">Muscle pain</string>
+    <string name="notes_label">Additional notes (optional)</string>
     <string name="error_symptom_not_found">This symptom entry could not be found.</string>
 
     <!-- Settings -->
