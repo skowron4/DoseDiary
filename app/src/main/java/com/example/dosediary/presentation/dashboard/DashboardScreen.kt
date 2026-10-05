@@ -52,6 +52,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -65,6 +66,8 @@ import com.example.dosediary.domain.model.Symptom
 import com.example.dosediary.presentation.common.EmptyState
 import com.example.dosediary.presentation.common.TopLevelContentInsets
 import com.example.dosediary.presentation.common.formatDateTime
+import com.example.dosediary.presentation.common.labelRes
+import com.example.dosediary.presentation.common.severityColor
 import com.example.dosediary.presentation.common.toUiMessage
 import com.example.dosediary.presentation.search.SearchEntryBar
 import org.koin.androidx.compose.koinViewModel
@@ -372,6 +375,16 @@ private fun SymptomCard(
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
+                if (symptom.tags.isNotEmpty()) {
+                    Text(
+                        text = symptom.tags.map { stringResource(it.labelRes()) }.joinToString(" · "),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.padding(top = 4.dp),
+                    )
+                }
                 if (symptom.notes.isNotBlank()) {
                     Text(
                         text = symptom.notes,
@@ -391,12 +404,13 @@ private fun SymptomCard(
 
 @Composable
 private fun SeverityBadge(severity: Int) {
-    val (container, content) = when {
-        severity <= 3 -> MaterialTheme.colorScheme.tertiaryContainer to MaterialTheme.colorScheme.onTertiaryContainer
-        severity <= 7 -> MaterialTheme.colorScheme.secondaryContainer to MaterialTheme.colorScheme.onSecondaryContainer
-        else -> MaterialTheme.colorScheme.errorContainer to MaterialTheme.colorScheme.onErrorContainer
-    }
-    Surface(shape = CircleShape, color = container, contentColor = content, modifier = Modifier.size(44.dp)) {
+    // Same green -> yellow -> red scale as the severity slider; every stop is light enough for dark text.
+    Surface(
+        shape = CircleShape,
+        color = severityColor(severity),
+        contentColor = Color.Black,
+        modifier = Modifier.size(44.dp),
+    ) {
         Box(contentAlignment = Alignment.Center) {
             Text(severity.toString(), style = MaterialTheme.typography.titleMedium)
         }
