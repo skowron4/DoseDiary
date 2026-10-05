@@ -13,24 +13,17 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -44,7 +37,7 @@ import com.example.dosediary.ui.theme.DoseDiaryTheme
  * A saved medication.
  *
  * Text hierarchy: the full commercial name is the primary text, the user's nickname (when set)
- * sits directly below it, and the active substance is shown as a compact info line.
+ * sits directly below it, then the quick dosage line ("2 pills, every 8h") and the active substance.
  * The reminder chip and the "log symptom" action share one row to keep the card short.
  */
 @OptIn(ExperimentalLayoutApi::class)
@@ -52,9 +45,7 @@ import com.example.dosediary.ui.theme.DoseDiaryTheme
 fun MedicationCard(
     medication: Medication,
     onLogSymptom: () -> Unit,
-    onEditNickname: () -> Unit,
-    onSetReminder: () -> Unit,
-    onClearReminder: () -> Unit,
+    onEdit: () -> Unit,
     onDelete: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -84,6 +75,14 @@ fun MedicationCard(
                             overflow = TextOverflow.Ellipsis,
                         )
                     }
+                    dosageSummary(medication)?.let {
+                        Text(
+                            text = it,
+                            style = MaterialTheme.typography.bodyMedium,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
                     medication.displaySubtitle?.let {
                         Text(
                             text = it,
@@ -94,8 +93,8 @@ fun MedicationCard(
                         )
                     }
                 }
-                IconButton(onClick = onEditNickname) {
-                    Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.action_edit_nickname))
+                IconButton(onClick = onEdit) {
+                    Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.action_edit_medication))
                 }
                 IconButton(onClick = onDelete) {
                     Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.action_delete))
@@ -107,23 +106,24 @@ fun MedicationCard(
                 verticalArrangement = Arrangement.Center,
                 horizontalArrangement = Arrangement.spacedBy(4.dp),
             ) {
-                val reminder = medication.reminderTime
                 AssistChip(
-                    onClick = onSetReminder,
+                    onClick = onEdit,
                     leadingIcon = { Icon(Icons.Default.Notifications, contentDescription = null, Modifier.size(18.dp)) },
                     label = {
                         Text(
-                            if (reminder != null) {
-                                stringResource(R.string.reminder_daily_at, reminder.format())
+                            text = if (medication.reminderTimes.isNotEmpty()) {
+                                stringResource(
+                                    R.string.reminder_daily_at,
+                                    medication.reminderTimes.joinToString(", ") { it.format() },
+                                )
                             } else {
                                 stringResource(R.string.action_set_reminder)
                             },
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
                         )
                     },
                 )
-                if (reminder != null) {
-                    TextButton(onClick = onClearReminder) { Text(stringResource(R.string.action_clear)) }
-                }
                 TextButton(onClick = onLogSymptom) {
                     Icon(Icons.Default.Add, contentDescription = null, Modifier.size(18.dp))
                     Text(
@@ -139,80 +139,43 @@ fun MedicationCard(
 private val Medication.nicknameOrNull: String?
     get() = customUserNickname?.takeIf { it.isNotBlank() }
 
-/** Lets the user set or clear a nickname. Saving an empty field removes it. */
+/** Quick dosage text such as "2 pills, every 8h"; either part may be missing, both missing gives `null`. */
 @Composable
-fun NicknameDialog(
-    medication: Medication,
-    onConfirm: (nickname: String) -> Unit,
-    onDismiss: () -> Unit,
-) {
-    var text by remember(medication.id) { mutableStateOf(medication.customUserNickname.orEmpty()) }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.nickname_dialog_title)) },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(
-                    value = text,
-                    onValueChange = { text = it.take(Medication.MAX_NICKNAME_LENGTH) },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    label = { Text(stringResource(R.string.nickname_label)) },
-                    supportingText = {
-                        Text(
-                            text = "${text.length} / ${Medication.MAX_NICKNAME_LENGTH}",
-                            modifier = Modifier.fillMaxWidth(),
-                            textAlign = TextAlign.End,
-                        )
-                    },
-                )
-                Text(
-                    text = stringResource(R.string.nickname_original_name, medication.commercialName),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                Text(
-                    text = stringResource(R.string.nickname_hint_clear),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = { onConfirm(text) }) { Text(stringResource(R.string.action_save)) }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) }
-        },
-    )
+private fun dosageSummary(medication: Medication): String? {
+    val dose = medication.doseAmount?.takeIf { it.isNotBlank() }
+    val interval = medication.intervalHours?.let { stringResource(R.string.dosage_every_hours, it) }
+    return listOfNotNull(dose, interval).takeIf { it.isNotEmpty() }?.joinToString(", ")
 }
 
-// --- Previews: open this file in Android Studio's Split/Design view to check both name cases. ---
+// --- Previews: open this file in Android Studio's Split/Design view to check the card variants. ---
 
 private val previewMedication = Medication(
     id = "preview",
     commercialName = "Advil",
     activeSubstance = "Ibuprofen",
     manufacturer = "Haleon",
-    reminderTime = ReminderTime(8, 30),
 )
 
 @Preview(name = "Commercial name only", showBackground = true)
 @Composable
 private fun MedicationCardPreview() {
     DoseDiaryTheme(dynamicColor = false) {
-        MedicationCard(previewMedication, {}, {}, {}, {}, {}, Modifier.padding(16.dp))
+        MedicationCard(previewMedication, {}, {}, {}, Modifier.padding(16.dp))
     }
 }
 
-@Preview(name = "With nickname", showBackground = true)
+@Preview(name = "Nickname, dosage and reminders", showBackground = true)
 @Composable
-private fun MedicationCardNicknamePreview() {
+private fun MedicationCardFullPreview() {
     DoseDiaryTheme(dynamicColor = false) {
         MedicationCard(
-            previewMedication.copy(customUserNickname = "Morning headache pill", reminderTime = null),
-            {}, {}, {}, {}, {},
+            previewMedication.copy(
+                customUserNickname = "Morning headache pill",
+                doseAmount = "2 pills",
+                intervalHours = 8,
+                reminderTimes = listOf(ReminderTime(8, 0), ReminderTime(16, 0), ReminderTime(23, 59)),
+            ),
+            {}, {}, {},
             Modifier.padding(16.dp),
         )
     }

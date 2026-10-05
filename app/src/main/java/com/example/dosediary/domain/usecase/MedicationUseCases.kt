@@ -3,6 +3,7 @@ package com.example.dosediary.domain.usecase
 import com.example.dosediary.domain.model.AppResult
 import com.example.dosediary.domain.model.DomainError
 import com.example.dosediary.domain.model.Medication
+import com.example.dosediary.domain.model.MedicationDetails
 import com.example.dosediary.domain.model.ReminderTime
 import com.example.dosediary.domain.model.ValidationReason
 import com.example.dosediary.domain.repository.DrugSearchRepository
@@ -45,52 +46,62 @@ class DeleteMedicationUseCase(
     }
 }
 
-/** Persists a daily reminder time for a saved medication and schedules the notification. */
-class ScheduleReminderUseCase(
-    private val repository: MedicationRepository,
-    private val scheduler: ReminderScheduler,
-) {
-    suspend operator fun invoke(medicationId: String, time: ReminderTime): AppResult<Unit> {
-        val medication = repository.getMedication(medicationId)
-            ?: return AppResult.Failure(DomainError.Validation(ValidationReason.MEDICATION_NOT_FOUND))
-        repository.updateReminder(medicationId, time)
-        scheduler.schedule(medicationId, medication.displayName, time)
-        return AppResult.Success(Unit)
-    }
+class GetMedicationUseCase(private val repository: MedicationRepository) {
+    suspend operator fun invoke(id: String): Medication? = repository.getMedication(id)
 }
 
 /**
- * Sets (or clears, when blank) the user's nickname for a medication. If a reminder is active it is
- * rescheduled so the notification text uses the new name.
+ * Validates and stores the nickname, dosage and reminder times of a saved medication, then
+ * (re)schedules its reminders so the notifications match what was saved.
+ *
+ * Blank text is stored as `null`; reminder times are de-duplicated and sorted.
  */
-class UpdateMedicationNicknameUseCase(
+class UpdateMedicationDetailsUseCase(
     private val repository: MedicationRepository,
     private val scheduler: ReminderScheduler,
 ) {
-    suspend operator fun invoke(medicationId: String, nickname: String): AppResult<Unit> {
-        val cleaned = nickname.trim().takeIf { it.isNotEmpty() }
-        if (cleaned != null && cleaned.length > Medication.MAX_NICKNAME_LENGTH) {
-            return AppResult.Failure(DomainError.Validation(ValidationReason.NICKNAME_TOO_LONG))
+    suspend operator fun invoke(
+        medicationId: String,
+        nickname: String,
+        doseAmount: String,
+        intervalHours: Int?,
+        reminderTimes: List<ReminderTime>,
+    ): AppResult<Unit> {
+        val cleanNickname = nickname.trim().takeIf { it.isNotEmpty() }
+        val cleanDose = doseAmount.trim().takeIf { it.isNotEmpty() }
+        val times = reminderTimes.distinct().sorted()
+
+        val invalid = when {
+            cleanNickname != null && cleanNickname.length > Medication.MAX_NICKNAME_LENGTH ->
+                ValidationReason.NICKNAME_TOO_LONG
+            cleanDose != null && cleanDose.length > Medication.MAX_DOSE_LENGTH ->
+                ValidationReason.DOSE_TOO_LONG
+            intervalHours != null &&
+                intervalHours !in Medication.MIN_INTERVAL_HOURS..Medication.MAX_INTERVAL_HOURS ->
+                ValidationReason.INTERVAL_OUT_OF_RANGE
+            times.size > Medication.MAX_REMINDERS -> ValidationReason.TOO_MANY_REMINDERS
+            else -> null
         }
+        if (invalid != null) return AppResult.Failure(DomainError.Validation(invalid))
+
         val medication = repository.getMedication(medicationId)
             ?: return AppResult.Failure(DomainError.Validation(ValidationReason.MEDICATION_NOT_FOUND))
 
-        repository.updateNickname(medicationId, cleaned)
+        repository.updateDetails(
+            medicationId,
+            MedicationDetails(
+                nickname = cleanNickname,
+                doseAmount = cleanDose,
+                intervalHours = intervalHours,
+                reminderTimes = times,
+            ),
+        )
 
-        medication.reminderTime?.let { time ->
-            scheduler.schedule(medicationId, (cleaned ?: medication.commercialName), time)
+        if (times.isEmpty()) {
+            scheduler.cancel(medicationId)
+        } else {
+            scheduler.schedule(medicationId, cleanNickname ?: medication.commercialName, times)
         }
         return AppResult.Success(Unit)
-    }
-}
-
-/** Removes the reminder of a medication. */
-class CancelReminderUseCase(
-    private val repository: MedicationRepository,
-    private val scheduler: ReminderScheduler,
-) {
-    suspend operator fun invoke(medicationId: String) {
-        scheduler.cancel(medicationId)
-        repository.updateReminder(medicationId, null)
     }
 }

@@ -27,6 +27,8 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.example.dosediary.R
 import com.example.dosediary.presentation.dashboard.DashboardScreen
+import com.example.dosediary.presentation.medication.EditMedicationScreen
+import com.example.dosediary.presentation.medication.EditMedicationViewModel
 import com.example.dosediary.presentation.search.SearchScreen
 import com.example.dosediary.presentation.settings.SettingsScreen
 import com.example.dosediary.presentation.symptom.AddSymptomScreen
@@ -88,6 +90,7 @@ fun DoseDiaryNavHost(navController: NavHostController = rememberNavController())
                 DashboardScreen(
                     onLogSymptom = { medicationId -> navController.navigate(AddSymptomRoute(medicationId = medicationId)) },
                     onEditSymptom = { symptomId -> navController.navigate(AddSymptomRoute(symptomId = symptomId)) },
+                    onEditMedication = { medicationId -> navController.navigate(EditMedicationRoute(medicationId)) },
                     onOpenSearch = { navController.navigate(SearchRoute) { launchSingleTop = true } },
                 )
             }
@@ -98,6 +101,16 @@ fun DoseDiaryNavHost(navController: NavHostController = rememberNavController())
                 )
             }
             composable<SettingsRoute> { SettingsScreen() }
+            composable<EditMedicationRoute> { entry ->
+                val route = entry.toRoute<EditMedicationRoute>()
+                val viewModel: EditMedicationViewModel = koinViewModel(
+                    parameters = { parametersOf(route.medicationId) },
+                )
+                EditMedicationScreen(
+                    onNavigateUp = { navController.navigateUp() },
+                    viewModel = viewModel,
+                )
+            }
             composable<AddSymptomRoute> { entry ->
                 val route = entry.toRoute<AddSymptomRoute>()
                 val viewModel: AddSymptomViewModel = koinViewModel(
