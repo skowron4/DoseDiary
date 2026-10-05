@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
@@ -53,7 +52,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -64,16 +62,11 @@ import com.example.dosediary.R
 import com.example.dosediary.domain.model.Medication
 import com.example.dosediary.domain.model.ReminderTime
 import com.example.dosediary.domain.model.Symptom
-import com.example.dosediary.domain.model.matchesQuery
 import com.example.dosediary.presentation.common.EmptyState
 import com.example.dosediary.presentation.common.TopLevelContentInsets
 import com.example.dosediary.presentation.common.formatDateTime
 import com.example.dosediary.presentation.common.toUiMessage
-import com.example.dosediary.presentation.search.MedicationSearchBar
-import com.example.dosediary.presentation.search.SearchUiState
-import com.example.dosediary.presentation.search.SearchViewModel
-import com.example.dosediary.presentation.search.openFdaResultItems
-import kotlinx.coroutines.flow.merge
+import com.example.dosediary.presentation.search.SearchEntryBar
 import org.koin.androidx.compose.koinViewModel
 
 private sealed interface PendingDelete {
@@ -82,24 +75,21 @@ private sealed interface PendingDelete {
 }
 
 /**
- * The Home screen: a sticky search bar on top of the user's medications and symptom log.
+ * The Home screen: the user's medications and symptom log, with a sticky search entry bar on top.
  *
- * - Query blank: saved medications + symptom log.
- * - Query typed: matching saved medications, followed by OpenFDA results (with "Save" actions).
+ * The bar is only an entry point: tapping it opens the full-screen search overlay
+ * ([onOpenSearch]), so search results never reflow this list.
  */
 @Composable
 fun DashboardScreen(
     onLogSymptom: (medicationId: String?) -> Unit,
     onEditSymptom: (symptomId: Long) -> Unit,
+    onOpenSearch: () -> Unit,
     viewModel: DashboardViewModel = koinViewModel(),
-    searchViewModel: SearchViewModel = koinViewModel(),
 ) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val query by searchViewModel.query.collectAsStateWithLifecycle()
-    val searchState by searchViewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
-    val searchFocusRequester = remember { FocusRequester() }
 
     var pendingDelete by remember { mutableStateOf<PendingDelete?>(null) }
     var reminderTarget by remember { mutableStateOf<Medication?>(null) }
@@ -113,10 +103,8 @@ fun DashboardScreen(
         awaitingPermission = null
     }
 
-    // Both ViewModels report one-off messages through the same snackbar.
-    LaunchedEffect(viewModel, searchViewModel) {
-        merge(viewModel.messages, searchViewModel.messages)
-            .collect { snackbarHostState.showSnackbar(it.resolve(context)) }
+    LaunchedEffect(viewModel) {
+        viewModel.messages.collect { snackbarHostState.showSnackbar(it.resolve(context)) }
     }
 
     Scaffold(
@@ -135,12 +123,7 @@ fun DashboardScreen(
                 .fillMaxSize()
                 .padding(padding),
             state = uiState,
-            query = query,
-            searchState = searchState,
-            searchFocusRequester = searchFocusRequester,
-            onQueryChange = searchViewModel::onQueryChange,
-            onRetrySearch = searchViewModel::retry,
-            onSaveSearchResult = searchViewModel::save,
+            onOpenSearch = onOpenSearch,
             onLogSymptomFor = { onLogSymptom(it.id) },
             onEditSymptom = { onEditSymptom(it.id) },
             onEditNickname = { nicknameTarget = it },
@@ -212,12 +195,7 @@ fun DashboardScreen(
 @Composable
 private fun HomeContent(
     state: DashboardUiState,
-    query: String,
-    searchState: SearchUiState,
-    searchFocusRequester: FocusRequester,
-    onQueryChange: (String) -> Unit,
-    onRetrySearch: () -> Unit,
-    onSaveSearchResult: (Medication) -> Unit,
+    onOpenSearch: () -> Unit,
     onLogSymptomFor: (Medication) -> Unit,
     onEditSymptom: (Symptom) -> Unit,
     onEditNickname: (Medication) -> Unit,
@@ -227,12 +205,6 @@ private fun HomeContent(
     onDeleteSymptom: (Symptom) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val isSearching = query.isNotBlank()
-    val listState = rememberLazyListState()
-
-    // Jump back to the top when switching between browsing and searching.
-    LaunchedEffect(isSearching) { listState.scrollToItem(0) }
-
     val medicationActions = MedicationActions(
         onLogSymptom = onLogSymptomFor,
         onEditNickname = onEditNickname,
@@ -243,7 +215,6 @@ private fun HomeContent(
 
     LazyColumn(
         modifier = modifier,
-        state = listState,
         // No top padding: a sticky header would pin *below* it and leave a gap that items scroll through.
         contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 96.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -259,26 +230,20 @@ private fun HomeContent(
         // Stays pinned to the top while everything below scrolls underneath it.
         stickyHeader(key = "search", contentType = "search") {
             Surface(color = MaterialTheme.colorScheme.background, modifier = Modifier.fillMaxWidth()) {
-                MedicationSearchBar(
-                    query = query,
-                    onQueryChange = onQueryChange,
-                    focusRequester = searchFocusRequester,
+                SearchEntryBar(
+                    onClick = onOpenSearch,
                     modifier = Modifier.padding(vertical = 8.dp),
                 )
             }
         }
 
-        if (isSearching) {
-            searchSections(state, query, searchState, medicationActions, onRetrySearch, onSaveSearchResult)
-        } else {
-            browseSections(
-                state = state,
-                actions = medicationActions,
-                onFocusSearch = { searchFocusRequester.requestFocus() },
-                onEditSymptom = onEditSymptom,
-                onDeleteSymptom = onDeleteSymptom,
-            )
-        }
+        browseSections(
+            state = state,
+            actions = medicationActions,
+            onOpenSearch = onOpenSearch,
+            onEditSymptom = onEditSymptom,
+            onDeleteSymptom = onDeleteSymptom,
+        )
     }
 }
 
@@ -294,7 +259,7 @@ private class MedicationActions(
 private fun LazyListScope.browseSections(
     state: DashboardUiState,
     actions: MedicationActions,
-    onFocusSearch: () -> Unit,
+    onOpenSearch: () -> Unit,
     onEditSymptom: (Symptom) -> Unit,
     onDeleteSymptom: (Symptom) -> Unit,
 ) {
@@ -318,7 +283,7 @@ private fun LazyListScope.browseSections(
                             icon = Icons.Default.Search,
                             message = stringResource(R.string.medications_empty),
                         )
-                        OutlinedButton(onClick = onFocusSearch) {
+                        OutlinedButton(onClick = onOpenSearch) {
                             Text(stringResource(R.string.action_find_medications))
                         }
                     }
@@ -347,35 +312,6 @@ private fun LazyListScope.browseSections(
             }
         }
     }
-}
-
-/** Search content: matches among saved medications first, then OpenFDA results. */
-private fun LazyListScope.searchSections(
-    state: DashboardUiState,
-    query: String,
-    searchState: SearchUiState,
-    actions: MedicationActions,
-    onRetrySearch: () -> Unit,
-    onSaveSearchResult: (Medication) -> Unit,
-) {
-    if (state is DashboardUiState.Success) {
-        val matches = state.medications.filter { it.matchesQuery(query) }
-        item(key = "local-header") { SectionHeader(stringResource(R.string.section_in_my_diary)) }
-        if (matches.isEmpty()) {
-            item(key = "local-empty") {
-                Text(
-                    text = stringResource(R.string.search_no_local_matches),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-        } else {
-            medicationItems(matches, actions)
-        }
-    }
-
-    item(key = "fda-header") { SectionHeader(stringResource(R.string.section_openfda)) }
-    openFdaResultItems(searchState, onRetrySearch, onSaveSearchResult)
 }
 
 private fun LazyListScope.medicationItems(medications: List<Medication>, actions: MedicationActions) {

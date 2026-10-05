@@ -5,6 +5,7 @@ import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStoreFile
 import androidx.work.WorkManager
+import com.example.dosediary.data.preferences.DataStoreSearchHistoryRepository
 import com.example.dosediary.data.preferences.DataStoreSettingsRepository
 import com.example.dosediary.data.repository.DrugSearchRepositoryImpl
 import com.example.dosediary.data.repository.MedicationRepositoryImpl
@@ -13,16 +14,21 @@ import com.example.dosediary.data.worker.WorkManagerReminderScheduler
 import com.example.dosediary.domain.repository.DrugSearchRepository
 import com.example.dosediary.domain.repository.MedicationRepository
 import com.example.dosediary.domain.repository.ReminderScheduler
+import com.example.dosediary.domain.repository.SearchHistoryRepository
 import com.example.dosediary.domain.repository.SettingsRepository
 import com.example.dosediary.domain.repository.SymptomRepository
+import com.example.dosediary.domain.usecase.AddSearchHistoryUseCase
 import com.example.dosediary.domain.usecase.CancelReminderUseCase
+import com.example.dosediary.domain.usecase.ClearSearchHistoryUseCase
 import com.example.dosediary.domain.usecase.DeleteMedicationUseCase
 import com.example.dosediary.domain.usecase.DeleteSymptomUseCase
 import com.example.dosediary.domain.usecase.GetSymptomUseCase
 import com.example.dosediary.domain.usecase.LogSymptomUseCase
 import com.example.dosediary.domain.usecase.ObserveSavedMedicationsUseCase
+import com.example.dosediary.domain.usecase.ObserveSearchHistoryUseCase
 import com.example.dosediary.domain.usecase.ObserveSettingsUseCase
 import com.example.dosediary.domain.usecase.ObserveSymptomsUseCase
+import com.example.dosediary.domain.usecase.RemoveSearchHistoryUseCase
 import com.example.dosediary.domain.usecase.SaveMedicationUseCase
 import com.example.dosediary.domain.usecase.ScheduleReminderUseCase
 import com.example.dosediary.domain.usecase.SearchMedicationUseCase
@@ -59,6 +65,7 @@ val appModule = module {
     single<MedicationRepository> { MedicationRepositoryImpl(dao = get(), clock = get()) }
     single<SymptomRepository> { SymptomRepositoryImpl(dao = get()) }
     single<SettingsRepository> { DataStoreSettingsRepository(dataStore = get()) }
+    single<SearchHistoryRepository> { DataStoreSearchHistoryRepository(dataStore = get()) }
     single<ReminderScheduler> { WorkManagerReminderScheduler(workManager = get()) }
 
     // --- Use cases ---------------------------------------------------------------------------
@@ -73,6 +80,10 @@ val appModule = module {
     factory { GetSymptomUseCase(get()) }
     factory { LogSymptomUseCase(get(), get()) }
     factory { DeleteSymptomUseCase(get()) }
+    factory { ObserveSearchHistoryUseCase(get()) }
+    factory { AddSearchHistoryUseCase(get()) }
+    factory { RemoveSearchHistoryUseCase(get()) }
+    factory { ClearSearchHistoryUseCase(get()) }
     factory { ObserveSettingsUseCase(get()) }
     factory { SetDarkModeUseCase(get()) }
     factory { SetBiometricsEnabledUseCase(get()) }
@@ -96,6 +107,10 @@ val appModule = module {
             searchMedication = get(),
             observeSavedMedications = get(),
             saveMedication = get(),
+            observeHistory = get(),
+            addToHistory = get(),
+            removeFromHistory = get(),
+            clearHistory = get(),
         )
     }
     viewModel { params ->
