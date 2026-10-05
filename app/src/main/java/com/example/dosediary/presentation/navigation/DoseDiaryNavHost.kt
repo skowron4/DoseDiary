@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
@@ -33,6 +34,7 @@ import com.example.dosediary.presentation.search.SearchScreen
 import com.example.dosediary.presentation.settings.SettingsScreen
 import com.example.dosediary.presentation.symptom.AddSymptomScreen
 import com.example.dosediary.presentation.symptom.AddSymptomViewModel
+import com.example.dosediary.presentation.symptom.SymptomDiaryScreen
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
 import kotlin.reflect.KClass
@@ -46,6 +48,7 @@ private data class TopLevelDestination(
 
 private val topLevelDestinations = listOf(
     TopLevelDestination(DashboardRoute, DashboardRoute::class, R.string.nav_dashboard, Icons.Default.Home),
+    TopLevelDestination(SymptomDiaryRoute, SymptomDiaryRoute::class, R.string.nav_symptoms, Icons.AutoMirrored.Filled.List),
     TopLevelDestination(SettingsRoute, SettingsRoute::class, R.string.nav_settings, Icons.Default.Settings),
 )
 
@@ -89,9 +92,14 @@ fun DoseDiaryNavHost(navController: NavHostController = rememberNavController())
             composable<DashboardRoute> {
                 DashboardScreen(
                     onLogSymptom = { medicationId -> navController.navigate(AddSymptomRoute(medicationId = medicationId)) },
-                    onEditSymptom = { symptomId -> navController.navigate(AddSymptomRoute(symptomId = symptomId)) },
                     onEditMedication = { medicationId -> navController.navigate(EditMedicationRoute(medicationId)) },
                     onOpenSearch = { navController.navigate(SearchRoute) { launchSingleTop = true } },
+                )
+            }
+            composable<SymptomDiaryRoute> {
+                SymptomDiaryScreen(
+                    onLogSymptom = { navController.navigate(AddSymptomRoute()) },
+                    onEditSymptom = { symptomId -> navController.navigate(AddSymptomRoute(symptomId = symptomId)) },
                 )
             }
             composable<SearchRoute> {
