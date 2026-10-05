@@ -2,6 +2,7 @@
     <string name="app_name" translatable="false">DoseDiary</string>
 
     <!-- "current / maximum" counters (severity, character limits). Kept as a resource so a locale can reorder it. -->
+    <string name="symptom_tags_more" translatable="false">+%1$d</string>
     <string name="counter_of" translatable="false">%1$d / %2$d</string>
 
     <!-- Navigation -->
