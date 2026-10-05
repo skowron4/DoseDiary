@@ -7,6 +7,10 @@ import kotlinx.serialization.Serializable
 
 @Serializable data object SettingsRoute
 
+/** Details and settings (reminder, nickname, removal) of one saved medication. */
+@Serializable
+data class MedicationDetailsRoute(val medicationId: String)
+
 /** Full-screen search overlay (recent searches, saved matches and OpenFDA results). */
 @Serializable data object SearchRoute
 
