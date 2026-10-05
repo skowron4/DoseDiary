@@ -1,5 +1,8 @@
 package com.example.dosediary.domain.usecase
 
+import com.example.dosediary.domain.analytics.AnalyticsEvents
+import com.example.dosediary.domain.analytics.AnalyticsLogger
+import com.example.dosediary.domain.analytics.NoOpAnalyticsLogger
 import com.example.dosediary.domain.model.AppResult
 import com.example.dosediary.domain.model.DomainError
 import com.example.dosediary.domain.model.Symptom
@@ -26,6 +29,7 @@ class GetSymptomUseCase(private val repository: SymptomRepository) {
 class LogSymptomUseCase(
     private val repository: SymptomRepository,
     private val clock: Clock,
+    private val analytics: AnalyticsLogger = NoOpAnalyticsLogger,
 ) {
     suspend operator fun invoke(
         id: Long = 0,
@@ -50,6 +54,15 @@ class LogSymptomUseCase(
                 tags = tags,
                 notes = cleanedNotes,
                 loggedAtMillis = originalLoggedAtMillis ?: clock.nowMillis(),
+            ),
+        )
+        analytics.logEvent(
+            AnalyticsEvents.SYMPTOM_LOGGED,
+            mapOf(
+                AnalyticsEvents.PARAM_SEVERITY to severity.toString(),
+                AnalyticsEvents.PARAM_LINKED_TO_MEDICATION to (medicationId != null).toString(),
+                AnalyticsEvents.PARAM_TAG_COUNT to tags.size.toString(),
+                AnalyticsEvents.PARAM_IS_UPDATE to (id != 0L).toString(),
             ),
         )
         return AppResult.Success(Unit)

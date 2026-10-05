@@ -1,5 +1,6 @@
 package com.example.dosediary.domain
 
+import com.example.dosediary.domain.analytics.AnalyticsLogger
 import com.example.dosediary.domain.model.AppResult
 import com.example.dosediary.domain.model.Medication
 import com.example.dosediary.domain.model.MedicationDetails
@@ -116,4 +117,15 @@ class FakeReminderPermissions(
     override fun canRequestNotificationPermission() = canRequest
     override fun exactAlarmsNeedUserAccess() = exactNeedsAccess
     override fun canScheduleExactAlarms() = canExact
+}
+
+/** Keeps every logged event so tests can assert on what was reported. */
+class RecordingAnalyticsLogger : AnalyticsLogger {
+    data class Event(val name: String, val params: Map<String, String>)
+
+    val events = mutableListOf<Event>()
+
+    override fun logEvent(eventName: String, params: Map<String, String>) {
+        events += Event(eventName, params)
+    }
 }
