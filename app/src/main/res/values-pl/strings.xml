@@ -65,7 +65,8 @@
     <string name="action_add">Dodaj</string>
     <string name="medication_updated">Zapisano zmiany</string>
     <string name="reminders_saved_no_permission">Zapisano, ale powiadomienia są wyłączone, więc nie otrzymasz alertu.</string>
-    <string name="error_medication_load_failed">Nie znaleziono tego leku.</string>    <string name="nickname_label">Pseudonim</string>
+    <string name="error_medication_load_failed">Nie znaleziono tego leku.</string>
+    <string name="nickname_label">Nazwa własna</string>
     <string name="nickname_hint_clear">Zostaw puste, aby zamiast tego wyświetlać nazwę handlową.</string>
     <string name="search_idle">Wpisz co najmniej 2 litery, aby przeszukać bazę leków OpenFDA.</string>
     <string name="search_no_results">Nie znaleziono leków. Sprawdź pisownię lub spróbuj innej nazwy handlowej.</string>
@@ -120,7 +121,7 @@
     <string name="error_query_too_short">Wpisz co najmniej 2 znaki.</string>
     <string name="error_severity_range">Nasilenie musi mieścić się w zakresie od 1 do 10.</string>
     <string name="error_notes_too_long">Notatki są zbyt długie.</string>
-    <string name="error_nickname_too_long">Pseudonim jest zbyt długi.</string>
+    <string name="error_nickname_too_long">Nazwa własna jest zbyt długa.</string>
     <string name="error_dose_too_long">Dawka jest zbyt długa.</string>
     <string name="error_interval_range">Podaj pełną liczbę godzin od 1 do 168.</string>
     <string name="error_too_many_reminders">Do jednego leku możesz ustawić do 10 przypomnień.</string>
