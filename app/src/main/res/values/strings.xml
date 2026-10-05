@@ -72,7 +72,21 @@
     <string name="severity_label">Severity</string>
     <string name="severity_mild">1 – Mild</string>
     <string name="severity_severe">10 – Severe</string>
-    <string name="notes_label">Notes (optional)</string>
+    <string name="severity_level_mild">Mild</string>
+    <string name="severity_level_moderate">Moderate</string>
+    <string name="severity_level_severe">Severe</string>
+    <string name="quick_tags_label">What are you feeling?</string>
+    <string name="tag_headache">Headache</string>
+    <string name="tag_nausea">Nausea</string>
+    <string name="tag_fatigue">Fatigue</string>
+    <string name="tag_fever">Fever</string>
+    <string name="tag_dizziness">Dizziness</string>
+    <string name="tag_stomach_pain">Stomach pain</string>
+    <string name="tag_cough">Cough</string>
+    <string name="tag_rash">Rash</string>
+    <string name="tag_insomnia">Insomnia</string>
+    <string name="tag_muscle_pain">Muscle pain</string>
+    <string name="notes_label">Additional notes (optional)</string>
     <string name="error_symptom_not_found">This symptom entry could not be found.</string>
 
     <!-- Settings -->

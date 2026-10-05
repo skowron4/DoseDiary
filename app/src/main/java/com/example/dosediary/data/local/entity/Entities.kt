@@ -39,6 +39,8 @@ data class SymptomEntity(
     val severity: Int,
     val notes: String,
     val loggedAtMillis: Long,
+    /** Comma-separated [com.example.dosediary.domain.model.SymptomTag] keys; empty when none. */
+    @ColumnInfo(defaultValue = "") val tags: String = "",
 )
 
 /** Projection of a symptom joined with the name of its (optional) medication. */
@@ -49,4 +51,5 @@ data class SymptomWithMedication(
     val severity: Int,
     val notes: String,
     val loggedAtMillis: Long,
+    val tags: String,
 )
