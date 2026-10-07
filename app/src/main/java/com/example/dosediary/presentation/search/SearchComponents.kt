@@ -11,14 +11,18 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
@@ -28,13 +32,18 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -300,6 +309,106 @@ fun LazyListScope.openFdaResultItems(
         }
     }
 }
+
+/** Always-available fallback at the bottom of the results: add what was searched for by hand. */
+fun LazyListScope.addCustomMedicationItem(query: String, onClick: () -> Unit) {
+    item(key = "custom-add") {
+        OutlinedButton(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
+            Icon(Icons.Default.Add, contentDescription = null, Modifier.size(18.dp))
+            Text(
+                text = stringResource(R.string.action_add_custom_medication, query),
+                modifier = Modifier.padding(start = 8.dp),
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+    }
+}
+
+/** Form for a medication that OpenFDA does not know. The name starts out as the search term. */
+@Composable
+fun CustomMedicationDialog(
+    initialName: String,
+    onSave: (name: String, activeSubstance: String, manufacturer: String, purpose: String, route: String) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    var name by rememberSaveable { mutableStateOf(initialName) }
+    var activeSubstance by rememberSaveable { mutableStateOf("") }
+    var manufacturer by rememberSaveable { mutableStateOf("") }
+    var purpose by rememberSaveable { mutableStateOf("") }
+    var route by rememberSaveable { mutableStateOf("") }
+    val nameValid = name.isNotBlank()
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.custom_medication_title)) },
+        text = {
+            Column(
+                modifier = Modifier.verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Text(
+                    text = stringResource(R.string.custom_medication_hint),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it.take(MAX_CUSTOM_NAME_LENGTH) },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    isError = !nameValid,
+                    label = { Text(stringResource(R.string.custom_medication_name_label)) },
+                    supportingText = if (nameValid) {
+                        null
+                    } else {
+                        { Text(stringResource(R.string.custom_medication_name_required)) }
+                    },
+                )
+                OutlinedTextField(
+                    value = activeSubstance,
+                    onValueChange = { activeSubstance = it.take(MAX_CUSTOM_FIELD_LENGTH) },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    label = { Text(stringResource(R.string.custom_medication_substance_label)) },
+                )
+                OutlinedTextField(
+                    value = manufacturer,
+                    onValueChange = { manufacturer = it.take(MAX_CUSTOM_FIELD_LENGTH) },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    label = { Text(stringResource(R.string.custom_medication_manufacturer_label)) },
+                )
+                OutlinedTextField(
+                    value = route,
+                    onValueChange = { route = it.take(MAX_CUSTOM_FIELD_LENGTH) },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    label = { Text(stringResource(R.string.custom_medication_route_label)) },
+                )
+                OutlinedTextField(
+                    value = purpose,
+                    onValueChange = { purpose = it.take(MAX_CUSTOM_PURPOSE_LENGTH) },
+                    modifier = Modifier.fillMaxWidth(),
+                    minLines = 2,
+                    maxLines = 4,
+                    label = { Text(stringResource(R.string.custom_medication_purpose_label)) },
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = { onSave(name, activeSubstance, manufacturer, purpose, route) },
+                enabled = nameValid,
+            ) { Text(stringResource(R.string.action_save)) }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
+    )
+}
+
+private const val MAX_CUSTOM_NAME_LENGTH = 100
+private const val MAX_CUSTOM_FIELD_LENGTH = 100
+private const val MAX_CUSTOM_PURPOSE_LENGTH = 500
 
 /** Error block sized for use inside a lazy list (the full-screen `ErrorState` would not fit). */
 @Composable
