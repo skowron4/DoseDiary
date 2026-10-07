@@ -21,7 +21,10 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
@@ -54,6 +57,7 @@ fun SearchScreen(
     val query by viewModel.query.collectAsStateWithLifecycle()
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
+    var showCustomDialog by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(viewModel) {
         viewModel.messages.collect { snackbarHostState.showSnackbar(it.resolve(context)) }
@@ -64,6 +68,17 @@ fun SearchScreen(
             pending = pending,
             onConfirm = viewModel::confirmSaveDespiteInteractions,
             onDismiss = viewModel::dismissInteractionWarning,
+        )
+    }
+
+    if (showCustomDialog) {
+        CustomMedicationDialog(
+            initialName = query.trim(),
+            onSave = { name, substance, manufacturer, purpose, route ->
+                showCustomDialog = false
+                viewModel.saveCustom(name, substance, manufacturer, purpose, route)
+            },
+            onDismiss = { showCustomDialog = false },
         )
     }
 
@@ -91,6 +106,7 @@ fun SearchScreen(
             state = state,
             onRetry = viewModel::retry,
             onSave = viewModel::save,
+            onAddCustom = { showCustomDialog = true },
             onLogSymptom = { onLogSymptom(it.id) },
             onSelectHistory = {
                 viewModel.onHistorySelected(it)
@@ -112,6 +128,7 @@ private fun SearchContent(
     state: SearchUiState,
     onRetry: () -> Unit,
     onSave: (Medication) -> Unit,
+    onAddCustom: () -> Unit,
     onLogSymptom: (Medication) -> Unit,
     onSelectHistory: (String) -> Unit,
     onRemoveHistory: (String) -> Unit,
@@ -136,6 +153,7 @@ private fun SearchContent(
                 SearchSectionHeader(stringResource(R.string.section_openfda))
             }
             openFdaResultItems(state, onRetry, onSave)
+            addCustomMedicationItem(query.trim(), onAddCustom)
         }
     }
 }

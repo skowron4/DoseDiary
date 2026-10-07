@@ -158,4 +158,13 @@
     <string name="interaction_dialog_title">Znaleziono możliwe interakcje</string>
     <string name="action_save_anyway">Zapisz mimo to</string>
     <string name="medication_saved_unchecked">Zapisano lek %1$s w dzienniku. Nie udało się sprawdzić interakcji.</string>
+    <string name="action_add_custom_medication">Dodaj własny lek: %1$s</string>
+    <string name="custom_medication_title">Dodaj własny lek</string>
+    <string name="custom_medication_hint">Nie ma go w bazie OpenFDA? Dodaj go samodzielnie, np. lek lokalny lub suplement.</string>
+    <string name="custom_medication_name_label">Nazwa</string>
+    <string name="custom_medication_name_required">Wpisz nazwę</string>
+    <string name="custom_medication_substance_label">Substancja czynna (opcjonalnie)</string>
+    <string name="custom_medication_manufacturer_label">Producent (opcjonalnie)</string>
+    <string name="custom_medication_purpose_label">Zastosowanie / notatki (opcjonalnie)</string>
+    <string name="custom_medication_route_label">Droga podania, np. doustnie (opcjonalnie)</string>
 </resources>

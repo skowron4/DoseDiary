@@ -40,6 +40,7 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.util.UUID
 
 /** State of the remote search request. */
 sealed interface SearchResultState {
@@ -207,6 +208,32 @@ class SearchViewModel(
         }
     }
 
+    /**
+     * Saves a medication the user typed in by hand (e.g. a Polish product or supplement missing from
+     * OpenFDA). It gets a locally generated id and is stored like any other medication. There is no
+     * label text to compare, so the interaction check is skipped.
+     */
+    fun saveCustom(
+        name: String,
+        activeSubstance: String,
+        manufacturer: String,
+        purpose: String,
+        route: String,
+    ) {
+        val commercialName = name.trim()
+        if (commercialName.isEmpty()) return
+        val medication = Medication(
+            id = "$CUSTOM_ID_PREFIX${UUID.randomUUID()}",
+            commercialName = commercialName,
+            activeSubstance = activeSubstance.trim().takeIf { it.isNotEmpty() },
+            manufacturer = manufacturer.trim().takeIf { it.isNotEmpty() },
+            purpose = purpose.trim().takeIf { it.isNotEmpty() },
+            route = route.trim().takeIf { it.isNotEmpty() },
+        )
+        recordCurrentQuery()
+        viewModelScope.launch { persist(medication, interactionsUnchecked = false) }
+    }
+
     /** The user saw the warnings and still wants the medication in the diary. */
     fun confirmSaveDespiteInteractions() {
         val pending = interactionState.value.pending ?: return
@@ -230,5 +257,6 @@ class SearchViewModel(
     }
     private companion object {
         const val DEBOUNCE_MILLIS = 400L
+        const val CUSTOM_ID_PREFIX = "custom-"
     }
 }

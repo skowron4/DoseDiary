@@ -162,4 +162,13 @@
     <string name="interaction_dialog_title">Possible interactions found</string>
     <string name="action_save_anyway">Save anyway</string>
     <string name="medication_saved_unchecked">%1$s saved to your diary. Interactions could not be checked.</string>
+    <string name="action_add_custom_medication">Add custom medication: %1$s</string>
+    <string name="custom_medication_title">Add custom medication</string>
+    <string name="custom_medication_hint">Not in the OpenFDA database? Add it yourself, for example a local or supplement product.</string>
+    <string name="custom_medication_name_label">Name</string>
+    <string name="custom_medication_name_required">Enter a name</string>
+    <string name="custom_medication_substance_label">Active substance (optional)</string>
+    <string name="custom_medication_manufacturer_label">Manufacturer (optional)</string>
+    <string name="custom_medication_purpose_label">Purpose / notes (optional)</string>
+    <string name="custom_medication_route_label">Route, e.g. oral (optional)</string>
 </resources>
